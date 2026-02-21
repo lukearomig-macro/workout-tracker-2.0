@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Coach Protocol</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0A0A0A;color:#F0EDE8;font-family:Georgia,'Times New Roman',serif;min-height:100vh}
+  input{font-family:Georgia,'Times New Roman',serif}
+  button{font-family:Georgia,'Times New Roman',serif}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:#0A0A0A}
+  ::-webkit-scrollbar-thumb{background:#222}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const PROTOCOL = {
+  days: [
+    {
+      id:1, name:"Day 1", label:"PUSH — Heavy Chest + Abs", color:"#FF4D1C",
+      exercises:[
+        {name:"Incline DB Press", sets:4, repRange:[6,10], rpe:"8 / last RPE 9"},
+        {name:"Machine Chest Press", sets:3, repRange:[8,12], rpe:"8 / last rest-pause RPE 10"},
+        {name:"Low-to-High Cable Fly", sets:3, repRange:[12,15], rpe:"9 all sets"},
+        {name:"Seated DB Shoulder Press", sets:3, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Cable Lateral Raise", sets:4, repRange:[12,20], rpe:"9 all sets"},
+        {name:"Rope Triceps Pushdown", sets:3, repRange:[10,15], rpe:"9 all sets"},
+        {name:"Ab Wheel Rollout", sets:4, repRange:[6,12], rpe:"8"},
+        {name:"Reverse Crunch / Pelvic Tilt", sets:4, repRange:[10,15], rpe:"8"},
+        {name:"Pallof Press", sets:3, repRange:[20,30], rpe:"7"},
+      ]
+    },
+    {
+      id:2, name:"Day 2", label:"PULL — Width + Thickness", color:"#0EA5E9",
+      exercises:[
+        {name:"Neutral-Grip Pulldown", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Chest-Supported Row", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Barbell or Machine Row", sets:3, repRange:[8,10], rpe:"8 / last RPE 9"},
+        {name:"Single-Arm Lat Pull-In", sets:3, repRange:[10,15], rpe:"9 all sets"},
+        {name:"Reverse Pec Deck", sets:4, repRange:[12,20], rpe:"9 all sets"},
+        {name:"Incline DB Curl", sets:3, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Cable Curl", sets:2, repRange:[12,15], rpe:"9 all sets"},
+      ]
+    },
+    {
+      id:3, name:"Day 3", label:"LEGS — Balanced + Abs", color:"#22C55E",
+      exercises:[
+        {name:"Smith Squat", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Romanian Deadlift", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Bulgarian Split Squat", sets:3, repRange:[8,12], rpe:"8"},
+        {name:"Leg Extension", sets:3, repRange:[12,20], rpe:"9 all sets"},
+        {name:"Lying Leg Curl", sets:3, repRange:[10,15], rpe:"9 all sets"},
+        {name:"Calf Raise", sets:4, repRange:[8,12], rpe:"9"},
+        {name:"Weighted Floor Crunch", sets:4, repRange:[8,12], rpe:"8"},
+        {name:"Ab Wheel Rollout", sets:3, repRange:[6,12], rpe:"8"},
+        {name:"Pallof Press", sets:3, repRange:[20,30], rpe:"7"},
+      ]
+    },
+    {
+      id:4, name:"Day 4", label:"PUSH — Volume + Shape", color:"#FF4D1C",
+      exercises:[
+        {name:"Incline Smith Press", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Flat DB Press", sets:3, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"High-to-Low Cable Fly", sets:3, repRange:[12,15], rpe:"9 all sets"},
+        {name:"Cable Fly", sets:3, repRange:[12,15], rpe:"9 all sets"},
+        {name:"DB Lateral Raise", sets:4, repRange:[15,25], rpe:"9 all sets"},
+        {name:"Overhead Triceps Extension", sets:3, repRange:[10,15], rpe:"9 all sets"},
+      ]
+    },
+    {
+      id:5, name:"Day 5", label:"ARMS + DELTS", color:"#A855F7",
+      exercises:[
+        {name:"Cable Lateral Raise", sets:5, repRange:[12,20], rpe:"9 all sets"},
+        {name:"Face Pull", sets:3, repRange:[15,20], rpe:"7 — health not strength"},
+        {name:"EZ-Bar Curl", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Dip Machine", sets:4, repRange:[8,12], rpe:"8 / last RPE 9"},
+        {name:"Hammer Curl", sets:3, repRange:[10,15], rpe:"9 all sets"},
+        {name:"Rear-Delt Cable Fly", sets:4, repRange:[15,20], rpe:"9 all sets"},
+      ]
+    },
+    {
+      id:6, name:"Day 6", label:"REST / Zone 2 Only", color:"#64748B",
+      exercises:[]
+    },
+  ]
+};
+
+const DELOAD_EVERY = 5;
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem("cp_v2")) || {sessions:[],weekCount:1,sessionCount:0}; }
+  catch { return {sessions:[],weekCount:1,sessionCount:0}; }
+}
+
+function checkProgression(sessions, exName, repRange) {
+  const rel = sessions.filter(s => s.entries.some(e => e.exerciseName === exName)).slice(-2);
+  if (rel.length < 2) return null;
+  const hitTop = rel.every(s => {
+    const e = s.entries.find(e => e.exerciseName === exName);
+    return e && e.sets.every(set => parseInt(set.reps) >= repRange[1]);
+  });
+  if (!hitTop) return null;
+  const lastEntry = rel[1].entries.find(e => e.exerciseName === exName);
+  return lastEntry?.sets?.[0]?.weight || "bodyweight";
+}
+
+function App() {
+  const [data, setData] = React.useState(loadData);
+  const [view, setView] = React.useState("home");
+  const [selectedDay, setSelectedDay] = React.useState(null);
+  const [activeSession, setActiveSession] = React.useState(null);
+  const [exIdx, setExIdx] = React.useState(0);
+  const [setInputs, setSetInputs] = React.useState([{weight:"",reps:"",rpe:""}]);
+  const [done, setDone] = React.useState(false);
+  const [alerts, setAlerts] = React.useState([]);
+
+  React.useEffect(() => {
+    try { localStorage.setItem("cp_v2", JSON.stringify(data)); } catch {}
+  }, [data]);
+
+  React.useEffect(() => {
+    const a = [];
+    if (data.weekCount % DELOAD_EVERY === 0)
+      a.push({type:"deload", msg:`Week ${data.weekCount} is a DELOAD week. 60% weights, half sets, RPE 6 max. Mandatory.`});
+    PROTOCOL.days.forEach(day => day.exercises.forEach(ex => {
+      const flag = checkProgression(data.sessions, ex.name, ex.repRange);
+      if (flag) a.push({type:"progress", msg:`${ex.name}: Hit top of rep range two sessions running at ${flag}lbs. Add weight next session.`});
+    }));
+    setAlerts(a);
+  }, [data]);
+
+  const isDeload = data.weekCount % DELOAD_EVERY === 0;
+  const activeDay = activeSession ? PROTOCOL.days.find(d => d.id === activeSession.dayId) : null;
+  const activeEx = activeDay ? activeDay.exercises[exIdx] : null;
+
+  function startSession(dayId) {
+    const day = PROTOCOL.days.find(d => d.id === dayId);
+    if (!day || !day.exercises.length) return;
+    const entries = {};
+    day.exercises.forEach(ex => { entries[ex.name] = []; });
+    setActiveSession({dayId, entries});
+    setExIdx(0);
+    setSetInputs([{weight:"",reps:"",rpe:""}]);
+    setDone(false);
+    setView("log");
+  }
+
+  function updateSet(i, field, val) {
+    setSetInputs(prev => prev.map((s,idx) => idx===i ? {...s,[field]:val} : s));
+  }
+
+  function saveAndNext() {
+    const ex = activeDay.exercises[exIdx];
+    const valid = setInputs.filter(s => s.reps);
+    const updated = {...activeSession, entries:{...activeSession.entries,[ex.name]:valid}};
+    setActiveSession(updated);
+    if (exIdx < activeDay.exercises.length - 1) {
+      setExIdx(i => i+1);
+      setSetInputs([{weight:"",reps:"",rpe:""}]);
+    } else {
+      const today = new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+      const entries = Object.entries(updated.entries).map(([exerciseName,sets])=>({exerciseName,sets}));
+      setData(prev => {
+        const sc = prev.sessionCount + 1;
+        const wc = sc % 6 === 0 ? prev.weekCount + 1 : prev.weekCount;
+        return {...prev, sessions:[...prev.sessions,{date:today,dayId:updated.dayId,entries}], sessionCount:sc, weekCount:wc};
+      });
+      setDone(true);
+    }
+  }
+
+  const S = {
+    wrap: {minHeight:"100vh",background:"#0A0A0A",color:"#F0EDE8",maxWidth:480,margin:"0 auto"},
+    hdr: {padding:"24px 20px 0",borderBottom:"1px solid #1E1E1E"},
+    pad: {padding:20},
+    card: {background:"#111",border:"1px solid #1E1E1E",borderRadius:10,padding:16,marginBottom:12},
+    btn: (bg,c="#fff") => ({width:"100%",background:bg,border:"none",color:c,padding:"13px 0",borderRadius:8,fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}),
+    label: (color="#555") => ({fontSize:10,letterSpacing:3,color,textTransform:"uppercase",marginBottom:6}),
+    input: {width:"100%",background:"#0A0A0A",border:"1px solid #2A2A2A",borderRadius:6,padding:"10px 12px",color:"#F0EDE8",fontSize:16,fontFamily:"inherit",outline:"none"},
+  };
+
+  return (
+    <div style={S.wrap}>
+      {/* HEADER */}
+      <div style={S.hdr}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={S.label()}>Training Log</div>
+            <div style={{fontSize:26,letterSpacing:-0.5}}>Coach Protocol</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={S.label()}>Week</div>
+            <div style={{fontSize:32,color:isDeload?"#FF4D1C":"#F0EDE8",fontWeight:"bold",lineHeight:1}}>{data.weekCount}</div>
+            {isDeload && <div style={{fontSize:9,color:"#FF4D1C",letterSpacing:2}}>DELOAD</div>}
+          </div>
+        </div>
+        <div style={{display:"flex",marginTop:20}}>
+          {[["home","Program"],["history","History"],["coach",`Coach${alerts.length>0?` (${alerts.length})`:""}`]].map(([v,label])=>(
+            <button key={v} onClick={()=>setView(v)} style={{flex:1,background:"none",border:"none",borderBottom:`2px solid ${view===v?"#FF4D1C":"transparent"}`,color:view===v?"#F0EDE8":"#555",padding:"10px 0",cursor:"pointer",fontSize:12,letterSpacing:2,textTransform:"uppercase",fontFamily:"inherit"}}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.pad}>
+
+        {/* HOME */}
+        {view==="home" && (
+          <div>
+            {alerts.length>0 && (
+              <div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:8,padding:14,marginBottom:20}}>
+                <div style={S.label("#FF4D1C")}>Coach Alerts</div>
+                {alerts.slice(0,2).map((a,i)=><div key={i} style={{fontSize:13,color:"#FF8C5A",marginBottom:4,lineHeight:1.5}}>→ {a.msg}</div>)}
+                {alerts.length>2 && <div style={{fontSize:12,color:"#555",marginTop:6,cursor:"pointer"}} onClick={()=>setView("coach")}>+{alerts.length-2} more in Coach tab</div>}
+              </div>
+            )}
+            <div style={S.label()}>Select Day</div>
+            {PROTOCOL.days.map(d => {
+              const last = [...data.sessions].reverse().find(s=>s.dayId===d.id);
+              const open = selectedDay===d.id;
+              return (
+                <div key={d.id} onClick={()=>setSelectedDay(open?null:d.id)} style={{background:open?"#141414":"#0F0F0F",border:`1px solid ${open?d.color:"#1E1E1E"}`,borderRadius:10,padding:"14px 16px",marginBottom:10,cursor:"pointer"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <div style={S.label(d.color)}>{d.name}</div>
+                      <div style={{fontSize:15}}>{d.label}</div>
+                    </div>
+                    {last && <div style={{fontSize:10,color:"#444"}}>{last.date}</div>}
+                  </div>
+                  {open && d.exercises.length>0 && (
+                    <div style={{marginTop:14}}>
+                      {d.exercises.map(ex=>(
+                        <div key={ex.name} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #1A1A1A",fontSize:13}}>
+                          <span>{ex.name}</span>
+                          <span style={{color:"#555",fontSize:11}}>{ex.sets}×{ex.repRange[0]}–{ex.repRange[1]}</span>
+                        </div>
+                      ))}
+                      <button onClick={e=>{e.stopPropagation();startSession(d.id);}} style={{...S.btn(d.color),marginTop:16}}>
+                        {isDeload?"Start Deload Session":"Start Session"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <button onClick={()=>{if(window.confirm("Reset all data?"))setData({sessions:[],weekCount:1,sessionCount:0});}} style={{...S.btn("none","#444"),border:"1px solid #2A2A2A",marginTop:16,fontSize:11}}>Reset All Data</button>
+          </div>
+        )}
+
+        {/* LOG */}
+        {view==="log" && activeSession && !done && activeEx && (
+          <div>
+            {isDeload && <div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:8,padding:12,marginBottom:16,fontSize:12,color:"#FF8C5A"}}>⚡ DELOAD — 60% weight, half sets, RPE 6 max.</div>}
+            <div style={{marginBottom:16}}>
+              <div style={S.label(activeDay.color)}>{activeDay.label} — {exIdx+1} of {activeDay.exercises.length}</div>
+              <div style={{fontSize:22,marginBottom:4}}>{activeEx.name}</div>
+              <div style={{fontSize:12,color:"#555"}}>{activeEx.sets} sets × {activeEx.repRange[0]}–{activeEx.repRange[1]} reps · RPE {activeEx.rpe}</div>
+            </div>
+            <div style={{height:3,background:"#1A1A1A",borderRadius:3,marginBottom:20}}>
+              <div style={{height:3,background:activeDay.color,borderRadius:3,width:`${(exIdx/activeDay.exercises.length)*100}%`,transition:"width 0.3s"}}/>
+            </div>
+            {(() => {
+              const prev = [...data.sessions].reverse().find(s=>s.dayId===activeSession.dayId&&s.entries.some(e=>e.exerciseName===activeEx.name));
+              const pe = prev?.entries.find(e=>e.exerciseName===activeEx.name);
+              if (!pe||!pe.sets.length) return null;
+              return (
+                <div style={{...S.card,marginBottom:16}}>
+                  <div style={S.label()}>Last time · {prev.date}</div>
+                  {pe.sets.map((s,i)=><div key={i} style={{fontSize:13,color:"#888",marginBottom:3}}>Set {i+1}: {s.weight?`${s.weight}lbs`:"BW"} × {s.reps} reps {s.rpe?`@ RPE ${s.rpe}`:""}</div>)}
+                </div>
+              );
+            })()}
+            <div style={{marginBottom:16}}>
+              <div style={{...S.label(),marginBottom:12}}>Log Sets</div>
+              {setInputs.map((s,i)=>(
+                <div key={i} style={{background:"#111",border:"1px solid #1E1E1E",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                    <div style={{fontSize:11,color:"#555",letterSpacing:2,textTransform:"uppercase"}}>Set {i+1}</div>
+                    {setInputs.length>1 && <button onClick={()=>setSetInputs(p=>p.filter((_,idx)=>idx!==i))} style={{background:"none",border:"none",color:"#444",cursor:"pointer",fontSize:20,padding:0}}>×</button>}
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:4}}>WEIGHT (lbs)</div>
+                      <input placeholder="0" value={s.weight} onChange={e=>updateSet(i,"weight",e.target.value)} inputMode="decimal" style={S.input}/>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:4}}>REPS</div>
+                      <input placeholder="0" value={s.reps} onChange={e=>updateSet(i,"reps",e.target.value)} inputMode="numeric" style={S.input}/>
+                    </div>
+                    <div style={{width:68}}>
+                      <div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:4}}>RPE</div>
+                      <input placeholder="8" value={s.rpe} onChange={e=>updateSet(i,"rpe",e.target.value)} inputMode="decimal" style={S.input}/>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button onClick={()=>setSetInputs(p=>[...p,{weight:"",reps:"",rpe:""}])} style={{...S.btn("none","#555"),border:"1px dashed #2A2A2A",fontSize:12}}>+ Add Set</button>
+            </div>
+            <button onClick={saveAndNext} style={S.btn(activeDay.color)}>
+              {exIdx<activeDay.exercises.length-1?"Save & Next →":"Finish Session"}
+            </button>
+            <button onClick={()=>{setView("home");setActiveSession(null);}} style={{...S.btn("none","#444"),marginTop:12,fontSize:12}}>Cancel</button>
+          </div>
+        )}
+
+        {/* DONE */}
+        {view==="log" && done && (
+          <div style={{textAlign:"center",padding:"40px 0"}}>
+            <div style={{fontSize:56,marginBottom:16}}>✓</div>
+            <div style={{fontSize:22,marginBottom:8}}>Session logged.</div>
+            <div style={{fontSize:13,color:"#555",marginBottom:32}}>Coach alerts updated.</div>
+            {alerts.length>0 && (
+              <div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:8,padding:16,marginBottom:24,textAlign:"left"}}>
+                <div style={S.label("#FF4D1C")}>Coach Alerts</div>
+                {alerts.map((a,i)=><div key={i} style={{fontSize:13,color:"#FF8C5A",marginBottom:8,lineHeight:1.5}}>→ {a.msg}</div>)}
+              </div>
+            )}
+            <button onClick={()=>{setView("home");setActiveSession(null);setDone(false);}} style={S.btn("#FF4D1C")}>Back to Program</button>
+          </div>
+        )}
+
+        {/* HISTORY */}
+        {view==="history" && (
+          <div>
+            <div style={{...S.label(),marginBottom:16}}>Session History</div>
+            {!data.sessions.length && <div style={{color:"#444",fontSize:14}}>No sessions logged yet.</div>}
+            {[...data.sessions].reverse().map((session,idx)=>{
+              const day = PROTOCOL.days.find(d=>d.id===session.dayId);
+              return <HistoryCard key={idx} session={session} day={day}/>;
+            })}
+          </div>
+        )}
+
+        {/* COACH */}
+        {view==="coach" && (
+          <div>
+            <div style={{...S.label(),marginBottom:16}}>Coach Dashboard</div>
+            <div style={{...S.card,border:`1px solid ${isDeload?"#FF4D1C":"#1E1E1E"}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={S.label()}>Current Week</div>
+                  <div style={{fontSize:28}}>Week {data.weekCount}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={S.label()}>Next Deload</div>
+                  <div style={{fontSize:20,color:"#FF4D1C"}}>Week {Math.ceil(data.weekCount/DELOAD_EVERY)*DELOAD_EVERY}</div>
+                </div>
+              </div>
+              {isDeload && <div style={{marginTop:12,background:"#1A0800",borderRadius:6,padding:"10px 12px",fontSize:13,color:"#FF8C5A"}}>Deload week. 60% weights, half sets, RPE 6 cap.</div>}
+            </div>
+            {!alerts.length
+              ? <div style={{background:"#0A1A0A",border:"1px solid #1E3A1E",borderRadius:10,padding:16,fontSize:14,color:"#22C55E"}}>✓ No alerts. Stay the course.</div>
+              : alerts.map((a,i)=>(
+                <div key={i} style={{background:a.type==="deload"?"#1A0800":"#0A100A",border:`1px solid ${a.type==="deload"?"#FF4D1C":"#22C55E"}`,borderRadius:10,padding:16,marginBottom:12}}>
+                  <div style={S.label(a.type==="deload"?"#FF4D1C":"#22C55E")}>{a.type==="deload"?"Deload Required":"Add Weight"}</div>
+                  <div style={{fontSize:14,color:"#F0EDE8",lineHeight:1.6}}>{a.msg}</div>
+                </div>
+              ))
+            }
+            <div style={{...S.card,marginTop:16}}>
+              <div style={{...S.label(),marginBottom:14}}>Stats</div>
+              <div style={{display:"flex",justifyContent:"space-around"}}>
+                {[[data.sessions.length,"Sessions"],[data.weekCount,"Weeks"],[Math.floor(data.sessions.length/5),"Deloads"]].map(([n,l])=>(
+                  <div key={l} style={{textAlign:"center"}}>
+                    <div style={{fontSize:28}}>{n}</div>
+                    <div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase"}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function HistoryCard({session, day}) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{border:"1px solid #1E1E1E",borderRadius:10,marginBottom:10,overflow:"hidden"}}>
+      <div onClick={()=>setOpen(!open)} style={{padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:10,letterSpacing:3,color:day?.color||"#555",textTransform:"uppercase",marginBottom:3}}>{session.date}</div>
+          <div style={{fontSize:15}}>{day?.label||"Unknown"}</div>
+        </div>
+        <div style={{color:"#444",fontSize:18}}>{open?"−":"+"}</div>
+      </div>
+      {open && (
+        <div style={{padding:"0 16px 16px"}}>
+          {session.entries.map((entry,i)=>(
+            <div key={i} style={{marginBottom:14}}>
+              <div style={{fontSize:12,color:"#888",marginBottom:6}}>{entry.exerciseName}</div>
+              {entry.sets.map((s,si)=>(
+                <div key={si} style={{fontSize:13,color:"#555",marginBottom:3}}>
+                  Set {si+1}: {s.weight?`${s.weight}lbs`:"BW"} × {s.reps} reps {s.rpe?`@ RPE ${s.rpe}`:""}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
