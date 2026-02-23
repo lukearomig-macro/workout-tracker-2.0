@@ -10,577 +10,202 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  body{background:#080808;color:#F0EDE8;font-family:Georgia,'Times New Roman',serif;min-height:100vh;overflow-x:hidden}
-  input{font-family:Georgia,'Times New Roman',serif;-webkit-appearance:none;appearance:none}
-  button{font-family:Georgia,'Times New Roman',serif;-webkit-appearance:none;appearance:none}
-  input:focus{outline:none}
-  ::-webkit-scrollbar{width:0px}
-  @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  .animate-in{animation:slideUp 0.25s ease forwards}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#080808;color:#F0EDE8;font-family:Georgia,'Times New Roman',serif;min-height:100vh;overflow-x:hidden}
+input,button,select,textarea{font-family:Georgia,'Times New Roman',serif;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none}
+::-webkit-scrollbar{width:0px}
+@keyframes slideUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ain{animation:slideUp 0.2s ease forwards}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-
-const { useState, useEffect, useRef } = React;
-
-const PROTOCOL = {
-  days: [
-    {
-      id:1, name:"Day 1", label:"PUSH — Heavy Chest + Abs", color:"#FF4D1C", restSeconds:120,
-      exercises:[
-        {name:"Incline DB Press", sets:4, repRange:[6,10], rpe:"8 / last RPE 9", cues:"Set the bench to 30–45°. Grip just outside shoulder width. Lower the DBs to your lower chest with elbows at 60° from your torso — not flared out. Press explosively, squeeze at the top. Full stretch at the bottom."},
-        {name:"Machine Chest Press", sets:3, repRange:[8,12], rpe:"8 / last set rest-pause to failure", cues:"Seat height so handles are at mid-chest. Drive through your palms, not your wrists. On the last set: go to failure, rack, rest 15 seconds, go again until you can't get a full rep."},
-        {name:"Low-to-High Cable Fly", sets:3, repRange:[12,15], rpe:"9 all sets", cues:"Cables set at the lowest position. Slight forward lean. Arc the handles upward and inward, meeting above your chest. Squeeze hard at the top. Control the eccentric — don't let the weight pull you back."},
-        {name:"Seated DB Shoulder Press", sets:3, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Sit upright, don't arch excessively. Start with DBs at ear height, elbows slightly in front of the body. Press overhead without fully locking out. Lower slowly — 2–3 seconds down."},
-        {name:"Cable Lateral Raise", sets:4, repRange:[12,20], rpe:"9 all sets", cues:"Cable at lowest setting, cross-body grip. Lead with your elbow, not your wrist. Raise to just above shoulder height. Tilt the handle slightly forward at the top (thumb down). Slow 3-second negative."},
-        {name:"Rope Triceps Pushdown", sets:3, repRange:[10,15], rpe:"9 all sets", cues:"Elbows pinned to your sides — they must not move. Split the rope at the bottom, fully extending and supinating slightly. Squeeze hard at full extension. Control the return."},
-        {name:"Ab Wheel Rollout", sets:4, repRange:[6,12], rpe:"8", cues:"From knees until you can hold a neutral spine from toes. Brace your core hard before moving. Roll out slowly — only as far as you can without your lower back arching. Pull back through your abs, not your shoulders. If you feel it in your lower back, reduce range immediately."},
-        {name:"Reverse Crunch / Pelvic Tilt", sets:4, repRange:[10,15], rpe:"8", cues:"Lie flat, hands under your glutes for support. Curl your pelvis toward your ribcage — this is a small movement. Don't use momentum. Squeeze at the top, slow on the way down. Your lower back should press into the floor throughout."},
-        {name:"Pallof Press", sets:3, repRange:[20,30], rpe:"7", cues:"Cable at chest height, stand sideways. Brace your core hard. Press straight out from your chest and hold briefly — resist the cable pulling you toward it. This is anti-rotation, not a pressing exercise. Move slowly and deliberately. Both sides."},
-      ]
-    },
-    {
-      id:2, name:"Day 2", label:"PULL — Width + Thickness", color:"#0EA5E9", restSeconds:120,
-      exercises:[
-        {name:"Neutral-Grip Pulldown", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Grip shoulder-width or slightly narrower, palms facing each other. Initiate by depressing your shoulder blades — pull your elbows down and back, not just down. Lean back slightly. Squeeze your lats hard at the bottom. Full stretch at the top."},
-        {name:"Chest-Supported Row", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Chest on the pad removes lower back from the equation — use this to isolate. Pull to your lower sternum, elbows close to your sides. Retract and depress your shoulder blades fully at the top. 2-second hold. Full stretch at the bottom."},
-        {name:"Barbell or Machine Row", sets:3, repRange:[8,10], rpe:"8 / last RPE 9", cues:"Hip hinge, flat back. Pull to your lower abdomen, elbows drive back past your hips. This is a heavier, more loaded movement — use it to build mid-back thickness. Control the descent. No jerking."},
-        {name:"Single-Arm Lat Pull-In", sets:3, repRange:[10,15], rpe:"9 all sets", cues:"Cable overhead, single handle. Initiate by driving your elbow down to your hip — not pulling with your hand. Keep your torso still. Full overhead stretch between reps. Feel your lat doing the work."},
-        {name:"Reverse Pec Deck", sets:4, repRange:[12,20], rpe:"9 all sets", cues:"Chest against the pad, arms slightly bent and locked. Lead with your elbows going back and wide. Squeeze your rear delts hard at full extension. Slow 3-second return. Do not use momentum."},
-        {name:"Incline DB Curl", sets:3, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Bench at 45–60°. Let your arms hang fully behind you — this pre-stretches the long head of the bicep. Curl without letting your elbows drift forward. Supinate your wrist as you curl."},
-        {name:"Cable Curl", sets:2, repRange:[12,15], rpe:"9 all sets", cues:"Low cable, straight bar or EZ attachment. Elbows fixed at your sides. Curl to full contraction, hold and squeeze for a count at the top. Slow on the way down — 3 seconds. The negative is where the growth is."},
-      ]
-    },
-    {
-      id:3, name:"Day 3", label:"LEGS — Balanced + Abs", color:"#22C55E", restSeconds:150,
-      exercises:[
-        {name:"Smith Squat", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Feet slightly forward of the bar, shoulder-width or slightly wider. Sit back and down — chest up, knees track over toes. Hit parallel or below. Drive through your whole foot on the way up. Brace your core hard throughout."},
-        {name:"Romanian Deadlift", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Hip hinge, not a squat. Push your hips back, keeping the bar close to your legs. Feel a deep stretch in your hamstrings — this is the point of the movement. Neutral spine throughout. Drive your hips forward to return to standing. Stop when you feel your pelvis start to tuck."},
-        {name:"Bulgarian Split Squat", sets:3, repRange:[8,12], rpe:"8", cues:"Rear foot elevated on a bench. Front foot far enough forward that your shin stays vertical at the bottom. Lower your rear knee toward the floor. Most of the load should be felt in your front quad and glute. Keep your torso upright."},
-        {name:"Leg Extension", sets:3, repRange:[12,20], rpe:"9 all sets", cues:"Seated upright, pad just above your ankles. Extend fully and hold the contraction for a count at the top. Slow 3-second negative. Don't let the weight crash down. Keep your glutes on the seat throughout."},
-        {name:"Lying Leg Curl", sets:3, repRange:[10,15], rpe:"9 all sets", cues:"Lie face down, pad just above your heels. Curl your heels toward your glutes — full range of motion. Squeeze hard at the top. Plantarflex your feet (toes pointed) to increase hamstring contraction. Slow, controlled negative."},
-        {name:"Calf Raise", sets:4, repRange:[8,12], rpe:"9", cues:"Full range of motion — full stretch at the bottom, full contraction at the top. Hold the top for a full second. Most people cheat calves with partial reps. Don't. Slow 3-second negative."},
-        {name:"Weighted Floor Crunch", sets:4, repRange:[8,12], rpe:"8", cues:"Hold a plate at your chest. Only your upper back comes off the floor — this is not a sit-up. Exhale and contract your abs hard at the top. Slow return. The weight should increase progressively over time like any other exercise."},
-        {name:"Ab Wheel Rollout", sets:3, repRange:[6,12], rpe:"8", cues:"From knees until you can hold a neutral spine from toes. Brace hard. Roll out only as far as you can without your lower back arching. Pull back through your abs. If you feel it in your lower back, reduce range immediately."},
-        {name:"Pallof Press", sets:3, repRange:[20,30], rpe:"7", cues:"Cable at chest height, stand sideways. Brace your core hard. Press straight out and hold — resist the rotation. Both sides. Slow and controlled."},
-      ]
-    },
-    {
-      id:4, name:"Day 4", label:"PUSH — Volume + Shape", color:"#FF4D1C", restSeconds:90,
-      exercises:[
-        {name:"Incline Smith Press", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Bench at 30–45°. Grip slightly wider than shoulder width. Lower the bar to your upper chest — don't bounce. Press explosively. Full range of motion."},
-        {name:"Flat DB Press", sets:3, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Flat bench. DBs at the sides of your chest, elbows at 60–75° from your body. Press up and slightly inward. Full stretch at the bottom — let the DBs drop below the bench level. This builds the mid-chest mass. Do not substitute this exercise."},
-        {name:"High-to-Low Cable Fly", sets:3, repRange:[12,15], rpe:"9 all sets", cues:"Cables set at the highest position. Arc downward and inward, meeting below your chest. This targets the lower chest fibers specifically. Squeeze hard at the bottom. Control the return."},
-        {name:"Cable Fly", sets:3, repRange:[12,15], rpe:"9 all sets", cues:"Cables at mid height, arms slightly bent and locked. Think about hugging a barrel. Squeeze hard at the peak contraction. Slow 3-second negative. Feel the stretch at full extension."},
-        {name:"DB Lateral Raise", sets:4, repRange:[15,25], rpe:"9 all sets", cues:"Slight forward lean at the hips. Lead with your elbows, not your wrists. Raise to just above parallel. Tilt your pinky up slightly at the top. Slow negative — 3–4 seconds down. Do not swing or use momentum."},
-        {name:"Overhead Triceps Extension", sets:3, repRange:[10,15], rpe:"9 all sets", cues:"Elbows pointed at the ceiling — keep them there, they must not flare out. Full extension overhead, full stretch behind your head. This hits the long head of the tricep. Slow negative."},
-      ]
-    },
-    {
-      id:5, name:"Day 5", label:"ARMS + DELTS", color:"#A855F7", restSeconds:90,
-      exercises:[
-        {name:"Cable Lateral Raise", sets:5, repRange:[12,20], rpe:"9 all sets", cues:"Cable at the lowest setting, cross-body. Lead with your elbow. Raise to just above shoulder height. Tilt the handle slightly forward at the top — thumb down. 3-second negative. 5 sets here is intentional — delts respond to volume."},
-        {name:"Face Pull", sets:3, repRange:[15,20], rpe:"7 — health not strength", cues:"Rope attachment at forehead height. Pull to your face with elbows high and wide — think W shape at the end position. External rotation at the end. This is shoulder health work — never go heavy. Light weight, full range, feel the rear delt and external rotators working."},
-        {name:"EZ-Bar Curl", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Elbows at your sides — they must not drift forward as you curl. Full range of motion. Supinate at the top. Slow 3-second negative. Do not swing or use body English."},
-        {name:"Dip Machine", sets:4, repRange:[8,12], rpe:"8 / last RPE 9", cues:"Stay upright to bias triceps over chest. Full extension at the bottom, don't lock out at the top — keep tension on the tricep. Slow negative. This is your primary tricep mass builder on this day."},
-        {name:"Hammer Curl", sets:3, repRange:[10,15], rpe:"9 all sets", cues:"Neutral grip (palms facing each other) throughout. This targets the brachialis and brachioradialis — key for arm thickness. Elbows stay at sides. Full range."},
-        {name:"Rear-Delt Cable Fly", sets:4, repRange:[15,20], rpe:"9 all sets", cues:"Cables crossed, cross-body grip. Arms slightly bent and locked. Lead with your elbows going wide and back. Full range — feel the squeeze in your rear delts at full extension. Slow return."},
-      ]
-    },
-    {
-      id:6, name:"Day 6", label:"REST / Zone 2 Only", color:"#64748B", restSeconds:0,
-      exercises:[]
-    },
-  ]
-};
-
-const DELOAD_EVERY = 5;
-
-function loadData() {
-  try { return JSON.parse(localStorage.getItem("cp_v3")) || {sessions:[],weekCount:1,sessionCount:0}; }
-  catch { return {sessions:[],weekCount:1,sessionCount:0}; }
+const{useState,useEffect,useRef}=React;
+const DAYS=[
+{id:1,name:"Day 1",label:"PUSH — Heavy Chest + Abs",color:"#FF4D1C",type:"training",exercises:[
+{name:"Incline DB Press",sets:4,rr:[6,10],rpe:"8 / last RPE 9",cues:"Bench at 30-45 degrees. Grip just outside shoulder width. Lower DBs to lower chest with elbows at 60 degrees from torso. Press explosively, squeeze at top. Full stretch at bottom."},
+{name:"Machine Chest Press",sets:3,rr:[8,12],rpe:"8 / last rest-pause to failure",cues:"Handles at mid-chest. Drive through palms. Last set: go to failure, rack, rest 15s, repeat until you cannot complete a full rep."},
+{name:"Low-to-High Cable Fly",sets:3,rr:[12,15],rpe:"9 all sets",cues:"Cables at lowest. Slight forward lean. Arc handles upward and inward above chest. Squeeze hard at top. Control the eccentric."},
+{name:"Seated DB Shoulder Press",sets:3,rr:[8,12],rpe:"8 / last RPE 9",cues:"Sit upright. DBs at ear height, elbows slightly in front. Press overhead without locking out. Lower slowly 2-3 seconds."},
+{name:"Cable Lateral Raise",sets:4,rr:[12,20],rpe:"9 all sets",cues:"Cable lowest, cross-body grip. Lead with elbow not wrist. Raise to just above shoulder height. Thumb down at top. Slow 3-second negative."},
+{name:"Rope Triceps Pushdown",sets:3,rr:[10,15],rpe:"9 all sets",cues:"Elbows pinned to sides, must not move. Split rope at bottom, fully extend. Squeeze hard at full extension. Control the return."},
+{name:"Ab Wheel Rollout",sets:4,rr:[6,12],rpe:"8",cues:"From knees until you can maintain neutral spine from toes. Brace hard before moving. Roll only as far as back stays neutral. Pull back through abs not shoulders."},
+{name:"Reverse Crunch",sets:4,rr:[10,15],rpe:"8",cues:"Lie flat, hands under glutes. Curl pelvis toward ribcage, small movement. No momentum. Squeeze at top, slow on the way down. Lower back presses into floor throughout."},
+{name:"Pallof Press",sets:3,rr:[20,30],rpe:"7",cues:"Cable at chest height, stand sideways. Brace core hard. Press straight out and hold, resist the rotation. Anti-rotation not pressing. Both sides."},
+]},
+{id:2,name:"Day 2",label:"PULL — Width + Thickness",color:"#0EA5E9",type:"training",exercises:[
+{name:"Neutral-Grip Pulldown",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Palms facing each other. Initiate by depressing shoulder blades, elbows down and back not just down. Lean back slightly. Squeeze lats hard at bottom. Full stretch at top."},
+{name:"Chest-Supported Row",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Chest on pad isolates back. Pull to lower sternum, elbows close to sides. Fully retract and depress shoulder blades at top, 2-second hold. Full stretch at bottom."},
+{name:"Barbell or Machine Row",sets:3,rr:[8,10],rpe:"8 / last RPE 9",cues:"Hip hinge, flat back. Pull to lower abdomen, elbows drive back past hips. Heavier movement for mid-back thickness. Control descent. No jerking."},
+{name:"Single-Arm Lat Pull-In",sets:3,rr:[10,15],rpe:"9 all sets",cues:"Cable overhead, single handle. Drive elbow down to hip, not pulling with hand. Torso stays still. Full overhead stretch between reps."},
+{name:"Reverse Pec Deck",sets:4,rr:[12,20],rpe:"9 all sets",cues:"Chest against pad, arms slightly bent and locked. Lead elbows back and wide. Squeeze rear delts at full extension. Slow 3-second return. No momentum."},
+{name:"Incline DB Curl",sets:3,rr:[8,12],rpe:"8 / last RPE 9",cues:"Bench at 45-60 degrees. Arms hang fully behind, pre-stretches long head of bicep. Curl without elbows drifting forward. Supinate wrist as you curl."},
+{name:"Cable Curl",sets:2,rr:[12,15],rpe:"9 all sets",cues:"Low cable. Elbows fixed at sides. Full contraction at top, hold and squeeze. Slow 3-second negative. The negative is where growth happens."},
+]},
+{id:3,name:"Day 3",label:"LEGS — Balanced + Abs",color:"#22C55E",type:"training",exercises:[
+{name:"Smith Squat",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Feet slightly forward, shoulder-width or wider. Sit back and down, chest up, knees track toes. Parallel or below. Drive through whole foot. Brace core hard throughout."},
+{name:"Romanian Deadlift",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Hip hinge not squat. Push hips back, bar close to legs. Feel deep hamstring stretch. Neutral spine throughout. Stop when pelvis starts to tuck."},
+{name:"Bulgarian Split Squat",sets:3,rr:[8,12],rpe:"8",cues:"Rear foot elevated. Front foot forward so shin stays vertical at bottom. Lower rear knee toward floor. Load felt in front quad and glute. Torso upright."},
+{name:"Leg Extension",sets:3,rr:[12,20],rpe:"9 all sets",cues:"Pad just above ankles. Extend fully, hold contraction at top for a count. Slow 3-second negative. Keep glutes on seat throughout."},
+{name:"Lying Leg Curl",sets:3,rr:[10,15],rpe:"9 all sets",cues:"Pad just above heels. Full range, curl heels toward glutes. Squeeze hard at top. Plantarflex feet to increase contraction. Slow negative."},
+{name:"Calf Raise",sets:4,rr:[8,12],rpe:"9",cues:"Full stretch at bottom, full contraction at top. Hold top for a full second. No partial reps. Slow 3-second negative."},
+{name:"Weighted Floor Crunch",sets:4,rr:[8,12],rpe:"8",cues:"Plate at chest. Only upper back comes off floor, not a sit-up. Hard abs contraction at top. Slow return. Progress the weight over time."},
+{name:"Ab Wheel Rollout",sets:3,rr:[6,12],rpe:"8",cues:"Brace hard. Roll only as far as lower back stays neutral. Pull back through abs. Feel it in lower back means range exceeds strength, reduce it."},
+{name:"Pallof Press",sets:3,rr:[20,30],rpe:"7",cues:"Cable at chest height, sideways. Brace. Press straight out and hold. Resist rotation. Both sides. Slow and controlled."},
+]},
+{id:4,name:"Day 4",label:"PUSH — Volume + Shape",color:"#FF4D1C",type:"training",exercises:[
+{name:"Incline Smith Press",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Bench at 30-45 degrees. Slightly wider than shoulder grip. Lower to upper chest, no bounce. Press explosively. Full range."},
+{name:"Flat DB Press",sets:3,rr:[8,12],rpe:"8 / last RPE 9",cues:"Flat bench. Elbows at 60-75 degrees from body. Press up and slightly inward. Full stretch at bottom, DBs below bench level. Builds mid-chest mass. Do not substitute."},
+{name:"High-to-Low Cable Fly",sets:3,rr:[12,15],rpe:"9 all sets",cues:"Cables at highest position. Arc downward and inward, meeting below chest. Targets lower chest fibers. Squeeze hard at bottom. Control the return."},
+{name:"Cable Fly",sets:3,rr:[12,15],rpe:"9 all sets",cues:"Cables at mid height, arms slightly bent and locked. Hug a barrel. Squeeze at peak contraction. Slow 3-second negative. Feel stretch at full extension."},
+{name:"DB Lateral Raise",sets:4,rr:[15,25],rpe:"9 all sets",cues:"Slight forward hip lean. Lead with elbows. Raise to just above parallel. Pinky up slightly at top. Slow 3-4 second negative. No swinging."},
+{name:"Overhead Triceps Extension",sets:3,rr:[10,15],rpe:"9 all sets",cues:"Elbows at ceiling, must not flare. Full extension overhead, full stretch behind head. Long head of tricep. Slow negative."},
+]},
+{id:5,name:"Day 5",label:"ARMS + DELTS",color:"#A855F7",type:"training",exercises:[
+{name:"Cable Lateral Raise",sets:5,rr:[12,20],rpe:"9 all sets",cues:"Lowest cable, cross-body. Lead with elbow. Just above shoulder height. Thumb down at top. 3-second negative. 5 sets is intentional, delts respond to volume."},
+{name:"Face Pull",sets:3,rr:[15,20],rpe:"7 — health only",cues:"Rope at forehead height. Pull to face with elbows high and wide, W shape. External rotation at end. Never go heavy. Light weight full range. Shoulder health work. Non-negotiable for longevity."},
+{name:"EZ-Bar Curl",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Elbows at sides, must not drift forward. Full range. Supinate at top. Slow 3-second negative. No swinging."},
+{name:"Dip Machine",sets:4,rr:[8,12],rpe:"8 / last RPE 9",cues:"Stay upright to bias triceps. Full extension at bottom, do not lock out at top. Slow negative. Primary tricep mass builder today."},
+{name:"Hammer Curl",sets:3,rr:[10,15],rpe:"9 all sets",cues:"Neutral grip throughout. Targets brachialis and brachioradialis, key for arm thickness. Elbows at sides. Full range."},
+{name:"Rear-Delt Cable Fly",sets:4,rr:[15,20],rpe:"9 all sets",cues:"Cables crossed, cross-body grip. Arms slightly bent, locked. Elbows wide and back. Full range. Squeeze rear delts at full extension. Slow return."},
+]},
+{id:6,name:"Day 6",label:"REST / Recovery",color:"#64748B",type:"rest",exercises:[]},
+];
+const DELOAD_EVERY=5;
+const PROTEIN_TARGET=185;
+const CAL_FLOORS={training:2700,rest:2300};
+const FOODS=[
+{name:"Chicken breast (4oz)",cal:185,pro:35,carb:0,fat:4},
+{name:"Ground beef 90pct (4oz)",cal:200,pro:24,carb:0,fat:11},
+{name:"Salmon (4oz)",cal:234,pro:25,carb:0,fat:14},
+{name:"Eggs (2 large)",cal:140,pro:12,carb:1,fat:10},
+{name:"Greek yogurt (1 cup)",cal:130,pro:22,carb:8,fat:0},
+{name:"Cottage cheese (1 cup)",cal:206,pro:28,carb:8,fat:5},
+{name:"Whey protein (1 scoop)",cal:130,pro:25,carb:3,fat:2},
+{name:"Oats (1 cup dry)",cal:307,pro:11,carb:55,fat:5},
+{name:"White rice (1 cup cooked)",cal:206,pro:4,carb:45,fat:0},
+{name:"Banana (medium)",cal:105,pro:1,carb:27,fat:0},
+{name:"Sweet potato (medium)",cal:103,pro:2,carb:24,fat:0},
+{name:"Bread (2 slices)",cal:160,pro:6,carb:30,fat:2},
+{name:"Pasta (2oz dry)",cal:200,pro:7,carb:42,fat:1},
+{name:"Avocado (half)",cal:120,pro:1,carb:6,fat:11},
+{name:"Olive oil (1 tbsp)",cal:120,pro:0,carb:0,fat:14},
+{name:"Mixed nuts (1oz)",cal:172,pro:5,carb:6,fat:15},
+{name:"Milk (1 cup)",cal:149,pro:8,carb:12,fat:8},
+{name:"Steak (4oz)",cal:280,pro:28,carb:0,fat:18},
+{name:"Tuna can (3oz)",cal:100,pro:22,carb:0,fat:1},
+{name:"Peanut butter (2 tbsp)",cal:190,pro:8,carb:6,fat:16},
+{name:"Apple (medium)",cal:95,pro:0,carb:25,fat:0},
+{name:"Protein bar",cal:200,pro:20,carb:22,fat:6},
+{name:"Honey (1 tbsp)",cal:64,pro:0,carb:17,fat:0},
+{name:"Cheese (1oz)",cal:113,pro:7,carb:0,fat:9},
+{name:"Collagen peptides (1 scoop)",cal:35,pro:9,carb:0,fat:0},
+];
+function todayStr(){return new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});}
+function todayKey(){const d=new Date();return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate();}
+function loadData(){try{return JSON.parse(localStorage.getItem("cp_v4"))||{sessions:[],weightLog:[],nutritionLog:[],weekCount:1,sessionCount:0};}catch{return{sessions:[],weightLog:[],nutritionLog:[],weekCount:1,sessionCount:0};}}
+function checkProg(sessions,exName,rr){
+  const rel=sessions.filter(s=>s.entries&&s.entries.some(e=>e.exerciseName===exName)).slice(-2);
+  if(rel.length<2)return null;
+  const hitTop=rel.every(s=>{const e=s.entries.find(e=>e.exerciseName===exName);return e&&e.sets.filter(s=>s.reps).every(set=>parseInt(set.reps)>=rr[1]);});
+  if(!hitTop)return null;
+  const le=rel[1].entries.find(e=>e.exerciseName===exName);
+  return le&&le.sets&&le.sets[0]?le.sets[0].weight||"BW":null;
 }
-
-function checkProgression(sessions, exName, repRange) {
-  const rel = sessions.filter(s => s.entries.some(e => e.exerciseName === exName)).slice(-2);
-  if (rel.length < 2) return null;
-  const hitTop = rel.every(s => {
-    const e = s.entries.find(e => e.exerciseName === exName);
-    return e && e.sets.filter(s=>s.reps).every(set => parseInt(set.reps) >= repRange[1]);
-  });
-  if (!hitTop) return null;
-  const lastEntry = rel[1].entries.find(e => e.exerciseName === exName);
-  return lastEntry?.sets?.[0]?.weight || "bodyweight";
-}
-
-function RestTimer({ restSeconds, onDismiss }) {
-  const [elapsed, setElapsed] = useState(0);
-  const intervalRef = useRef(null);
-  useEffect(() => {
-    intervalRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
-    return () => clearInterval(intervalRef.current);
-  }, []);
-  const remaining = Math.max(0, restSeconds - elapsed);
-  const pct = Math.min(1, elapsed / restSeconds);
-  const isOver = elapsed >= restSeconds;
-  const mins = Math.floor(remaining / 60);
-  const secs = remaining % 60;
-  return (
-    <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"#0F0F0F",borderTop:"1px solid #2A2A2A",padding:"20px 20px 40px",zIndex:100}}>
-      <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
-        <div style={{fontSize:10,letterSpacing:3,color:"#555",textTransform:"uppercase"}}>Rest Timer</div>
-        <div style={{fontSize:10,color:"#555"}}>{Math.floor(elapsed/60)}:{String(elapsed%60).padStart(2,"0")} elapsed</div>
-      </div>
-      <div style={{height:4,background:"#1A1A1A",borderRadius:4,marginBottom:16,overflow:"hidden"}}>
-        <div style={{height:4,background:isOver?"#22C55E":"#FF4D1C",borderRadius:4,width:`${pct*100}%`,transition:"width 0.5s linear"}}/>
-      </div>
-      <div style={{textAlign:"center",marginBottom:16}}>
-        <div style={{fontSize:52,fontWeight:"bold",color:isOver?"#22C55E":"#F0EDE8",lineHeight:1}}>
-          {isOver?"GO":`${mins}:${String(secs).padStart(2,"0")}`}
-        </div>
-        {isOver && <div style={{fontSize:11,color:"#22C55E",letterSpacing:2,marginTop:4}}>REST COMPLETE</div>}
-      </div>
-      <button onClick={onDismiss} style={{width:"100%",background:isOver?"#22C55E":"#1A1A1A",border:"none",color:isOver?"#fff":"#888",padding:"13px 0",borderRadius:8,fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>
-        {isOver?"Start Next Set":"Skip Rest"}
-      </button>
+function getTrend(log){const l=log.slice(-7);if(l.length<3)return null;return l[l.length-1].weight-l[0].weight;}
+function Stopwatch(){
+  const[running,setRunning]=useState(false);
+  const[elapsed,setElapsed]=useState(0);
+  const ref=useRef(null);
+  useEffect(()=>{if(running){ref.current=setInterval(()=>setElapsed(e=>e+1),1000);}else clearInterval(ref.current);return()=>clearInterval(ref.current);},[running]);
+  const m=Math.floor(elapsed/60),s=elapsed%60;
+  function toggle(){if(running){setRunning(false);setElapsed(0);}else{setElapsed(0);setRunning(true);}}
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:10,background:"#111",border:"1px solid #2A2A2A",borderRadius:10,padding:"10px 16px",marginBottom:16}}>
+      <div style={{fontSize:10,letterSpacing:2,color:"#555",textTransform:"uppercase",flex:1}}>Rest Timer</div>
+      <div style={{fontSize:22,fontWeight:"bold",color:running?"#22C55E":"#555",minWidth:56,textAlign:"center"}}>{m}:{String(s).padStart(2,"0")}</div>
+      <button onClick={toggle} style={{background:running?"#0A2A0A":"#1A1A1A",border:"1px solid "+(running?"#22C55E":"#2A2A2A"),borderRadius:8,padding:"7px 16px",color:running?"#22C55E":"#888",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>{running?"Stop":"Start"}</button>
     </div>
   );
 }
-
-function ResetButton({onReset}) {
-  const [confirming, setConfirming] = useState(false);
-  if (!confirming) return (
-    <button onClick={()=>setConfirming(true)} style={{width:"100%",background:"none",border:"1px solid #1A1A1A",color:"#333",padding:"10px 0",borderRadius:10,fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit",marginTop:16}}>Reset All Data</button>
-  );
-  return (
+function ResetBtn({onReset}){
+  const[c,setC]=useState(false);
+  if(!c)return<button onClick={()=>setC(true)} style={{width:"100%",background:"none",border:"1px solid #1A1A1A",color:"#333",padding:"10px 0",borderRadius:10,fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit",marginTop:16}}>Reset All Data</button>;
+  return(
     <div style={{marginTop:16,background:"#1A0808",border:"1px solid #3A1A1A",borderRadius:10,padding:16,textAlign:"center"}}>
-      <div style={{fontSize:13,color:"#CC3311",marginBottom:12}}>Delete all session history? This cannot be undone.</div>
+      <div style={{fontSize:13,color:"#CC3311",marginBottom:12}}>Delete all data? Cannot be undone.</div>
       <div style={{display:"flex",gap:10}}>
-        <button onClick={()=>setConfirming(false)} style={{flex:1,background:"none",border:"1px solid #2A2A2A",color:"#888",padding:"10px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Keep Data</button>
-        <button onClick={()=>{onReset();setConfirming(false);}} style={{flex:1,background:"#CC3311",border:"none",color:"#fff",padding:"10px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Yes, Delete</button>
+        <button onClick={()=>setC(false)} style={{flex:1,background:"none",border:"1px solid #2A2A2A",color:"#888",padding:"10px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Keep Data</button>
+        <button onClick={()=>{onReset();setC(false);}} style={{flex:1,background:"#CC3311",border:"none",color:"#fff",padding:"10px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Yes Delete</button>
       </div>
     </div>
   );
 }
-
-function HistoryCard({session, day}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div style={{border:"1px solid #1E1E1E",borderRadius:12,marginBottom:10,overflow:"hidden",background:"#0D0D0D"}}>
-      <div onClick={()=>setOpen(!open)} style={{padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{fontSize:10,letterSpacing:3,color:day?.color||"#555",textTransform:"uppercase",marginBottom:3}}>{session.date}</div>
-          <div style={{fontSize:15}}>{day?.label||"Unknown"}</div>
-        </div>
-        <div style={{color:"#333",fontSize:20}}>{open?"−":"+"}</div>
-      </div>
-      {open && (
-        <div style={{padding:"0 16px 16px",borderTop:"1px solid #1A1A1A"}}>
-          {session.entries.map((entry,i)=>(
-            <div key={i} style={{marginBottom:14,paddingTop:i===0?14:0}}>
-              <div style={{fontSize:12,color:"#888",marginBottom:8}}>{entry.exerciseName}</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                {entry.sets.map((s,si)=>(
-                  <div key={si} style={{background:"#111",borderRadius:8,padding:"5px 10px",fontSize:12,color:"#666"}}>
-                    {s.weight?`${s.weight}lb`:"BW"} × {s.reps} {s.rpe?`@${s.rpe}`:""}
-                  </div>
-                ))}
-              </div>
+function HistoryCard({session,day,onUpdate}){
+  const[open,setOpen]=useState(false);
+  const[editing,setEditing]=useState(false);
+  const[ed,setEd]=useState(null);
+  function startEdit(){setEd(JSON.parse(JSON.stringify(session)));setEditing(true);}
+  function updSet(ei,si,field,val){setEd(prev=>({...prev,entries:prev.entries.map((e,i)=>i!==ei?e:{...e,sets:e.sets.map((s,j)=>j!==si?s:{...s,[field]:val})})}));}
+  if(editing&&ed)return(
+    <div style={{border:"1px solid #FF4D1C",borderRadius:12,marginBottom:10,background:"#0D0D0D",padding:16}}>
+      <div style={{fontSize:10,letterSpacing:3,color:"#FF4D1C",textTransform:"uppercase",marginBottom:12}}>Editing - {session.date}</div>
+      {ed.entries&&ed.entries.map((entry,ei)=>(
+        <div key={ei} style={{marginBottom:16}}>
+          <div style={{fontSize:12,color:"#888",marginBottom:8}}>{entry.exerciseName}</div>
+          {entry.sets.map((s,si)=>(
+            <div key={si} style={{display:"flex",gap:6,marginBottom:6}}>
+              <input value={s.weight||""} onChange={e=>updSet(ei,si,"weight",e.target.value)} placeholder="lbs" inputMode="decimal" style={{flex:1,background:"#111",border:"1px solid #2A2A2A",borderRadius:6,padding:"8px",color:"#F0EDE8",fontSize:14,fontFamily:"inherit",textAlign:"center"}}/>
+              <input value={s.reps||""} onChange={e=>updSet(ei,si,"reps",e.target.value)} placeholder="reps" inputMode="numeric" style={{flex:1,background:"#111",border:"1px solid #2A2A2A",borderRadius:6,padding:"8px",color:"#F0EDE8",fontSize:14,fontFamily:"inherit",textAlign:"center"}}/>
+              <input value={s.rpe||""} onChange={e=>updSet(ei,si,"rpe",e.target.value)} placeholder="RPE" inputMode="decimal" style={{width:56,background:"#111",border:"1px solid #2A2A2A",borderRadius:6,padding:"8px",color:"#F0EDE8",fontSize:14,fontFamily:"inherit",textAlign:"center"}}/>
             </div>
           ))}
         </div>
-      )}
+      ))}
+      <div style={{display:"flex",gap:10,marginTop:8}}>
+        <button onClick={()=>setEditing(false)} style={{flex:1,background:"none",border:"1px solid #2A2A2A",color:"#888",padding:"10px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+        <button onClick={()=>{onUpdate(ed);setEditing(false);}} style={{flex:2,background:"#22C55E",border:"none",color:"#fff",padding:"10px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Save Changes</button>
+      </div>
     </div>
   );
-}
-
-function App() {
-  const [data, setData] = useState(loadData);
-  const [view, setView] = useState("home");
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [session, setSession] = useState(null);
-  const [exIdx, setExIdx] = useState(0);
-  const [showTimer, setShowTimer] = useState(false);
-  const [showCues, setShowCues] = useState(false);
-  const [alerts, setAlerts] = useState([]);
-  const [sessionDone, setSessionDone] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-
-  useEffect(() => {
-    try { localStorage.setItem("cp_v3", JSON.stringify(data)); } catch {}
-  }, [data]);
-
-  useEffect(() => {
-    const a = [];
-    if (data.weekCount % DELOAD_EVERY === 0)
-      a.push({type:"deload", msg:`Week ${data.weekCount} is a DELOAD week. 60% weights, half sets, RPE 6 max. Mandatory.`});
-    PROTOCOL.days.forEach(day => day.exercises.forEach(ex => {
-      const flag = checkProgression(data.sessions, ex.name, ex.repRange);
-      if (flag) a.push({type:"progress", msg:`${ex.name}: Hit top of rep range two sessions running at ${flag}lbs. Add weight next session.`});
-    }));
-    setAlerts(a);
-  }, [data]);
-
-  const isDeload = data.weekCount % DELOAD_EVERY === 0;
-  const activeDay = session ? PROTOCOL.days.find(d => d.id === session.dayId) : null;
-  const activeProtocolEx = activeDay ? activeDay.exercises[exIdx] : null;
-  const activeSessionEx = session ? session.exercises[exIdx] : null;
-
-  function startSession(dayId) {
-    const day = PROTOCOL.days.find(d => d.id === dayId);
-    if (!day || !day.exercises.length) return;
-    const exercises = day.exercises.map(ex => ({
-      name: ex.name,
-      sets: Array.from({length: ex.sets}, () => ({weight:"", reps:"", rpe:"", done:false}))
-    }));
-    setSession({dayId, exercises});
-    setExIdx(0);
-    setShowCues(false);
-    setShowTimer(false);
-    setSessionDone(false);
-    setShowCancelConfirm(false);
-    setView("log");
-  }
-
-  function updateSetField(exI, setI, field, val) {
-    setSession(prev => ({
-      ...prev,
-      exercises: prev.exercises.map((ex, ei) => ei !== exI ? ex : {
-        ...ex,
-        sets: ex.sets.map((s, si) => si === setI ? {...s, [field]: val} : s)
-      })
-    }));
-  }
-
-  function markSetDone(exI, setI) {
-    const wasNotDone = !session.exercises[exI].sets[setI].done;
-    setSession(prev => ({
-      ...prev,
-      exercises: prev.exercises.map((ex, ei) => ei !== exI ? ex : {
-        ...ex,
-        sets: ex.sets.map((s, si) => si === setI ? {...s, done: !s.done} : s)
-      })
-    }));
-    if (wasNotDone) setShowTimer(true);
-  }
-
-  function addSet(exI) {
-    setSession(prev => ({
-      ...prev,
-      exercises: prev.exercises.map((ex, ei) => ei !== exI ? ex : {
-        ...ex, sets: [...ex.sets, {weight:"", reps:"", rpe:"", done:false}]
-      })
-    }));
-  }
-
-  function removeSet(exI, setI) {
-    setSession(prev => ({
-      ...prev,
-      exercises: prev.exercises.map((ex, ei) => ei !== exI ? ex : {
-        ...ex, sets: ex.sets.filter((_, si) => si !== setI)
-      })
-    }));
-  }
-
-  function finishSession() {
-    const today = new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
-    const entries = session.exercises.map(ex => ({
-      exerciseName: ex.name,
-      sets: ex.sets.filter(s => s.reps).map(s => ({weight:s.weight, reps:s.reps, rpe:s.rpe}))
-    }));
-    setData(prev => {
-      const sc = prev.sessionCount + 1;
-      const wc = sc % 6 === 0 ? prev.weekCount + 1 : prev.weekCount;
-      return {...prev, sessions:[...prev.sessions,{date:today,dayId:session.dayId,entries}], sessionCount:sc, weekCount:wc};
-    });
-    setSessionDone(true);
-    setShowTimer(false);
-  }
-
-  function cancelSession() {
-    setView("home");
-    setSession(null);
-    setShowCancelConfirm(false);
-    setShowTimer(false);
-  }
-
-  const S = {
-    wrap:{minHeight:"100vh",background:"#080808",color:"#F0EDE8",maxWidth:480,margin:"0 auto"},
-    label:(c="#555")=>({fontSize:10,letterSpacing:3,color:c,textTransform:"uppercase",marginBottom:6,display:"block"}),
-    card:(border="#1E1E1E",bg="#111")=>({background:bg,border:`1px solid ${border}`,borderRadius:12,padding:16,marginBottom:12}),
-    btn:(bg,c="#fff")=>({width:"100%",background:bg,border:"none",color:c,padding:"14px 0",borderRadius:10,fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}),
-    input:{width:"100%",background:"#080808",border:"1px solid #2A2A2A",borderRadius:8,padding:"11px 12px",color:"#F0EDE8",fontSize:17,fontFamily:"inherit",textAlign:"center"},
-  };
-
-  return (
-    <div style={S.wrap}>
-      {/* HEADER */}
-      <div style={{padding:"52px 20px 0",borderBottom:"1px solid #1E1E1E",background:"#080808",position:"sticky",top:0,zIndex:50}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
-          <div>
-            <span style={S.label()}>Training Log</span>
-            <div style={{fontSize:24,letterSpacing:-0.5}}>Coach Protocol</div>
-          </div>
-          <div style={{textAlign:"right"}}>
-            <span style={S.label()}>Week</span>
-            <div style={{fontSize:30,color:isDeload?"#FF4D1C":"#F0EDE8",fontWeight:"bold",lineHeight:1}}>{data.weekCount}</div>
-            {isDeload && <div style={{fontSize:9,color:"#FF4D1C",letterSpacing:2,textTransform:"uppercase"}}>DELOAD</div>}
-          </div>
+  return(
+    <div style={{border:"1px solid #1E1E1E",borderRadius:12,marginBottom:10,overflow:"hidden",background:"#0D0D0D"}}>
+      <div onClick={()=>setOpen(!open)} style={{padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:10,letterSpacing:3,color:day?day.color:"#555",textTransform:"uppercase",marginBottom:3}}>{session.date}</div>
+          <div style={{fontSize:15}}>{session.type==="rest"?(session.restType||"Rest Day"):(day?day.label:"Training")}</div>
         </div>
-
-        {view !== "log" && (
-          <div style={{display:"flex"}}>
-            {[["home","Program"],["history","History"],["coach",`Coach${alerts.length>0?` (${alerts.length})`:""}`]].map(([v,label])=>(
-              <button key={v} onClick={()=>setView(v)} style={{flex:1,background:"none",border:"none",borderBottom:`2px solid ${view===v?"#FF4D1C":"transparent"}`,color:view===v?"#F0EDE8":"#555",padding:"10px 0",cursor:"pointer",fontSize:12,letterSpacing:2,textTransform:"uppercase",fontFamily:"inherit"}}>{label}</button>
-            ))}
-          </div>
-        )}
-
-        {view === "log" && session && !sessionDone && (
-          <div style={{paddingBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <span style={{...S.label(activeDay?.color),marginBottom:0}}>{activeDay?.label}</span>
-              {!showCancelConfirm
-                ? <button onClick={()=>setShowCancelConfirm(true)} style={{background:"none",border:"1px solid #3A1A1A",borderRadius:6,padding:"6px 12px",color:"#CC3311",fontSize:11,letterSpacing:1,cursor:"pointer",fontFamily:"inherit",textTransform:"uppercase"}}>Cancel ✕</button>
-                : <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                    <span style={{fontSize:11,color:"#888"}}>Sure?</span>
-                    <button onClick={cancelSession} style={{background:"#CC3311",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Yes</button>
-                    <button onClick={()=>setShowCancelConfirm(false)} style={{background:"none",border:"1px solid #2A2A2A",borderRadius:6,padding:"6px 12px",color:"#888",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>No</button>
-                  </div>
-              }
-            </div>
-            <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
-              {session.exercises.map((ex,i) => {
-                const allDone = ex.sets.every(s=>s.done);
-                const someDone = ex.sets.some(s=>s.done);
-                return (
-                  <button key={i} onClick={()=>{setExIdx(i);setShowCues(false);setShowTimer(false);}} style={{flexShrink:0,background:i===exIdx?"#1A1A1A":"none",border:`1px solid ${i===exIdx?(activeDay?.color||"#FF4D1C"):allDone?"#22C55E":someDone?"#444":"#2A2A2A"}`,borderRadius:20,padding:"5px 12px",color:i===exIdx?"#F0EDE8":allDone?"#22C55E":"#555",fontSize:11,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-                    {allDone?"✓ ":""}{i+1}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <div style={{color:"#333",fontSize:20}}>{open?"-":"+"}</div>
       </div>
-
-      <div style={{padding:20, paddingBottom: showTimer ? 220 : 20}}>
-
-        {/* HOME */}
-        {view==="home" && (
-          <div className="animate-in">
-            {alerts.length>0 && (
-              <div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:12,padding:14,marginBottom:20}}>
-                <span style={S.label("#FF4D1C")}>Coach Alerts</span>
-                {alerts.slice(0,2).map((a,i)=><div key={i} style={{fontSize:13,color:"#FF8C5A",marginBottom:4,lineHeight:1.5}}>→ {a.msg}</div>)}
-                {alerts.length>2 && <div style={{fontSize:12,color:"#555",marginTop:6,cursor:"pointer"}} onClick={()=>setView("coach")}>+{alerts.length-2} more in Coach →</div>}
-              </div>
-            )}
-            <span style={S.label()}>Select Day</span>
-            {PROTOCOL.days.map(d => {
-              const last = [...data.sessions].reverse().find(s=>s.dayId===d.id);
-              const open = selectedDay===d.id;
-              return (
-                <div key={d.id} onClick={()=>setSelectedDay(open?null:d.id)} style={{background:open?"#141414":"#0D0D0D",border:`1px solid ${open?d.color:"#1E1E1E"}`,borderRadius:12,padding:"14px 16px",marginBottom:10,cursor:"pointer"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div>
-                      <span style={S.label(d.color)}>{d.name}</span>
-                      <div style={{fontSize:15}}>{d.label}</div>
-                    </div>
-                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
-                      {last && <div style={{fontSize:10,color:"#444"}}>{last.date}</div>}
-                      <div style={{fontSize:18,color:"#333"}}>{open?"−":"+"}</div>
-                    </div>
-                  </div>
-                  {open && d.exercises.length>0 && (
-                    <div style={{marginTop:14}} onClick={e=>e.stopPropagation()}>
-                      {d.exercises.map(ex=>(
-                        <div key={ex.name} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1A1A1A",fontSize:13}}>
-                          <span style={{color:"#CCC"}}>{ex.name}</span>
-                          <span style={{color:"#555",fontSize:11}}>{ex.sets}×{ex.repRange[0]}–{ex.repRange[1]}</span>
-                        </div>
-                      ))}
-                      <button onClick={()=>startSession(d.id)} style={{...S.btn(d.color),marginTop:16}}>
-                        {isDeload?"Start Deload Session ⚡":"Start Session →"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <ResetButton onReset={()=>setData({sessions:[],weekCount:1,sessionCount:0})}/>
-          </div>
-        )}
-
-        {/* LOG */}
-        {view==="log" && session && !sessionDone && activeProtocolEx && activeSessionEx && (
-          <div className="animate-in">
-            {isDeload && <div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:10,padding:12,marginBottom:16,fontSize:12,color:"#FF8C5A"}}>⚡ DELOAD WEEK — 60% weight, half sets, RPE 6 max.</div>}
-
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:24,marginBottom:6,lineHeight:1.2}}>{activeProtocolEx.name}</div>
-              <div style={{fontSize:12,color:"#666",marginBottom:12}}>{activeProtocolEx.sets} sets × {activeProtocolEx.repRange[0]}–{activeProtocolEx.repRange[1]} reps · RPE {activeProtocolEx.rpe}</div>
-              <button onClick={()=>setShowCues(!showCues)} style={{background:"none",border:"1px solid #2A2A2A",borderRadius:8,padding:"8px 14px",color:"#888",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>
-                {showCues?"Hide Cues ↑":"Form Cues ↓"}
-              </button>
-              {showCues && (
-                <div style={{background:"#0D0D0D",border:"1px solid #1E1E1E",borderRadius:10,padding:14,fontSize:13,color:"#888",lineHeight:1.7,marginTop:10}}>
-                  {activeProtocolEx.cues}
-                </div>
-              )}
-            </div>
-
-            {(() => {
-              const prev = [...data.sessions].reverse().find(s=>s.dayId===session.dayId&&s.entries.some(e=>e.exerciseName===activeProtocolEx.name));
-              const pe = prev?.entries.find(e=>e.exerciseName===activeProtocolEx.name);
-              if (!pe||!pe.sets.length) return (
-                <div style={{...S.card(),marginBottom:16}}>
-                  <span style={S.label()}>First time — establish your baseline</span>
-                </div>
-              );
-              return (
-                <div style={{...S.card(),marginBottom:16}}>
-                  <span style={S.label()}>Last time · {prev.date}</span>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                    {pe.sets.map((s,i)=>(
-                      <div key={i} style={{background:"#0D0D0D",borderRadius:8,padding:"6px 10px",fontSize:12,color:"#777"}}>
-                        {s.weight?`${s.weight}lb`:"BW"} × {s.reps} {s.rpe?`@${s.rpe}`:""}
+      {open&&(
+        <div style={{padding:"0 16px 16px",borderTop:"1px solid #1A1A1A"}}>
+          {session.type==="rest"?(
+            <div style={{paddingTop:12,fontSize:13,color:"#555"}}>{session.notes||"No notes."}</div>
+          ):(
+            <div>
+              {session.entries&&session.entries.map((entry,i)=>(
+                <div key={i} style={{marginBottom:14,paddingTop:i===0?14:0}}>
+                  <div style={{fontSize:12,color:"#888",marginBottom:8}}>{entry.exerciseName}</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {entry.sets.map((s,si)=>(
+                      <div key={si} style={{background:"#111",borderRadius:8,padding:"5px 10px",fontSize:12,color:"#666"}}>
+                        {s.weight?s.weight+"lb":"BW"} x {s.reps} {s.rpe?"@"+s.rpe:""}
                       </div>
                     ))}
                   </div>
                 </div>
-              );
-            })()}
-
-            <span style={S.label()}>Log Sets</span>
-            {activeSessionEx.sets.map((s, si) => (
-              <div key={si} style={{background:s.done?"#0A1A0A":"#111",border:`1px solid ${s.done?"#22C55E":"#1E1E1E"}`,borderRadius:12,padding:"12px 14px",marginBottom:10,transition:"all 0.2s"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:s.done?0:10}}>
-                  <div style={{fontSize:11,color:s.done?"#22C55E":"#555",letterSpacing:2,textTransform:"uppercase"}}>
-                    {s.done?"✓ ":""}Set {si+1}
-                  </div>
-                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                    {s.done && <div style={{fontSize:12,color:"#22C55E"}}>{s.weight?`${s.weight}lb`:"BW"} × {s.reps}{s.rpe?` @${s.rpe}`:""}</div>}
-                    <button onClick={()=>removeSet(exIdx,si)} style={{background:"none",border:"1px solid #2A2A2A",borderRadius:6,color:"#444",cursor:"pointer",fontSize:13,padding:"3px 8px"}}>✕</button>
-                    <button onClick={()=>markSetDone(exIdx,si)} style={{background:s.done?"#0A2A0A":"#1A1A1A",border:`1px solid ${s.done?"#22C55E":"#2A2A2A"}`,borderRadius:8,padding:"6px 14px",color:s.done?"#22C55E":"#666",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>
-                      {s.done?"Undo":"Done"}
-                    </button>
-                  </div>
-                </div>
-                {!s.done && (
-                  <div style={{display:"flex",gap:8}}>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:5,textAlign:"center"}}>WEIGHT (lbs)</div>
-                      <input placeholder="0" value={s.weight} onChange={e=>updateSetField(exIdx,si,"weight",e.target.value)} inputMode="decimal" style={S.input}/>
-                    </div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:5,textAlign:"center"}}>REPS</div>
-                      <input placeholder="0" value={s.reps} onChange={e=>updateSetField(exIdx,si,"reps",e.target.value)} inputMode="numeric" style={S.input}/>
-                    </div>
-                    <div style={{width:72}}>
-                      <div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:5,textAlign:"center"}}>RPE</div>
-                      <input placeholder="8" value={s.rpe} onChange={e=>updateSetField(exIdx,si,"rpe",e.target.value)} inputMode="decimal" style={S.input}/>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-
-            <button onClick={()=>addSet(exIdx)} style={{...S.btn("none","#555"),border:"1px dashed #2A2A2A",fontSize:12,marginBottom:20}}>+ Add Set</button>
-
-            <div style={{display:"flex",gap:10}}>
-              {exIdx > 0 && (
-                <button onClick={()=>{setExIdx(i=>i-1);setShowCues(false);setShowTimer(false);}} style={{...S.btn("#1A1A1A","#888"),flex:1}}>← Back</button>
-              )}
-              {exIdx < session.exercises.length - 1
-                ? <button onClick={()=>{setExIdx(i=>i+1);setShowCues(false);setShowTimer(false);}} style={{...S.btn(activeDay?.color||"#FF4D1C"),flex:2}}>Next Exercise →</button>
-                : <button onClick={finishSession} style={{...S.btn("#22C55E"),flex:2}}>Finish Session ✓</button>
-              }
+              ))}
+              <button onClick={startEdit} style={{marginTop:8,background:"none",border:"1px solid #2A2A2A",color:"#888",padding:"8px 16px",borderRadius:8,fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>Edit Session</button>
             </div>
-          </div>
-        )}
-
-        {/* SESSION DONE */}
-        {view==="log" && sessionDone && (
-          <div className="animate-in" style={{textAlign:"center",padding:"60px 0"}}>
-            <div style={{fontSize:64,marginBottom:20}}>✓</div>
-            <div style={{fontSize:24,marginBottom:8}}>Session complete.</div>
-            <div style={{fontSize:13,color:"#555",marginBottom:40}}>Data saved. Coach alerts updated.</div>
-            {alerts.length>0 && (
-              <div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:12,padding:16,marginBottom:24,textAlign:"left"}}>
-                <span style={S.label("#FF4D1C")}>Coach Alerts</span>
-                {alerts.map((a,i)=><div key={i} style={{fontSize:13,color:"#FF8C5A",marginBottom:8,lineHeight:1.5}}>→ {a.msg}</div>)}
-              </div>
-            )}
-            <button onClick={()=>{setView("home");setSession(null);setSessionDone(false);}} style={S.btn("#FF4D1C")}>Back to Program</button>
-          </div>
-        )}
-
-        {/* HISTORY */}
-        {view==="history" && (
-          <div className="animate-in">
-            <span style={{...S.label(),display:"block",marginBottom:16}}>Session History</span>
-            {!data.sessions.length && <div style={{color:"#444",fontSize:14,padding:"40px 0",textAlign:"center"}}>No sessions logged yet.</div>}
-            {[...data.sessions].reverse().map((session,idx)=>{
-              const day = PROTOCOL.days.find(d=>d.id===session.dayId);
-              return <HistoryCard key={idx} session={session} day={day}/>;
-            })}
-          </div>
-        )}
-
-        {/* COACH */}
-        {view==="coach" && (
-          <div className="animate-in">
-            <span style={{...S.label(),display:"block",marginBottom:16}}>Coach Dashboard</span>
-            <div style={{...S.card(isDeload?"#FF4D1C":"#1E1E1E"),marginBottom:16}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div>
-                  <span style={S.label()}>Current Week</span>
-                  <div style={{fontSize:32}}>{data.weekCount}</div>
-                </div>
-                <div style={{textAlign:"right"}}>
-                  <span style={S.label()}>Next Deload</span>
-                  <div style={{fontSize:24,color:"#FF4D1C"}}>Week {Math.ceil(data.weekCount/DELOAD_EVERY)*DELOAD_EVERY}</div>
-                </div>
-              </div>
-              {isDeload && <div style={{marginTop:12,background:"#1A0800",borderRadius:8,padding:"10px 12px",fontSize:13,color:"#FF8C5A",lineHeight:1.5}}>Deload week. 60% weights, half sets, RPE 6 cap. Do not skip.</div>}
-            </div>
-            {!alerts.length
-              ? <div style={{background:"#0A1A0A",border:"1px solid #1E3A1E",borderRadius:12,padding:16,fontSize:14,color:"#22C55E",marginBottom:12}}>✓ No alerts. Stay the course.</div>
-              : alerts.map((a,i)=>(
-                <div key={i} style={{background:a.type==="deload"?"#1A0800":"#0A100A",border:`1px solid ${a.type==="deload"?"#FF4D1C":"#22C55E"}`,borderRadius:12,padding:16,marginBottom:12}}>
-                  <span style={S.label(a.type==="deload"?"#FF4D1C":"#22C55E")}>{a.type==="deload"?"Deload Required":"Add Weight"}</span>
-                  <div style={{fontSize:14,color:"#F0EDE8",lineHeight:1.6}}>{a.msg}</div>
-                </div>
-              ))
-            }
-            <div style={{...S.card(),marginTop:8}}>
-              <span style={{...S.label(),display:"block",marginBottom:14}}>Stats</span>
-              <div style={{display:"flex",justifyContent:"space-around"}}>
-                {[[data.sessions.length,"Sessions"],[data.weekCount,"Weeks"],[Math.floor(data.weekCount/DELOAD_EVERY),"Deloads Done"]].map(([n,l])=>(
-                  <div key={l} style={{textAlign:"center"}}>
-                    <div style={{fontSize:30,fontWeight:"bold"}}>{n}</div>
-                    <div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase",marginTop:4}}>{l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {showTimer && view==="log" && activeDay && (
-        <RestTimer restSeconds={activeDay.restSeconds} onDismiss={()=>setShowTimer(false)}/>
+          )}
+        </div>
       )}
     </div>
   );
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-</script>
-</body>
-</html>
+function NutritionView({data,setData}){
+  const[sel,setSel]=useState("");
+  const[showC,setShowC]=useState(false);
+  const[cn,s
