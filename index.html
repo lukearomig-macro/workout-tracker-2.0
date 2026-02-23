@@ -208,4 +208,332 @@ function HistoryCard({session,day,onUpdate}){
 function NutritionView({data,setData}){
   const[sel,setSel]=useState("");
   const[showC,setShowC]=useState(false);
-  const[cn,s
+  const[cn,setCn]=useState("");const[cc,setCc]=useState("");const[cp,setCp]=useState("");const[ccb,setCcb]=useState("");const[cf,setCf]=useState("");
+  const[dt,setDt]=useState("training");
+  const key=todayKey();
+  const tlog=data.nutritionLog.filter(e=>e.dayKey===key);
+  const tot=tlog.reduce((a,e)=>({cal:a.cal+(e.cal||0),pro:a.pro+(e.pro||0),carb:a.carb+(e.carb||0),fat:a.fat+(e.fat||0)}),{cal:0,pro:0,carb:0,fat:0});
+  const floor=CAL_FLOORS[dt];
+  const cPct=Math.min(1,tot.cal/floor);
+  const pPct=Math.min(1,tot.pro/PROTEIN_TARGET);
+  function addFood(){const food=FOODS.find(f=>f.name===sel);if(!food)return;setData(prev=>({...prev,nutritionLog:[...prev.nutritionLog,{...food,dayKey:key,date:todayStr(),id:Date.now()}]}));setSel("");}
+  function addCustom(){if(!cn||!cc)return;setData(prev=>({...prev,nutritionLog:[...prev.nutritionLog,{name:cn,cal:parseInt(cc)||0,pro:parseInt(cp)||0,carb:parseInt(ccb)||0,fat:parseInt(cf)||0,dayKey:key,date:todayStr(),id:Date.now()}]}));setCn("");setCc("");setCp("");setCcb("");setCf("");setShowC(false);}
+  function remove(id){setData(prev=>({...prev,nutritionLog:prev.nutritionLog.filter(e=>e.id!==id)}));}
+  const lbl={fontSize:10,letterSpacing:3,color:"#555",textTransform:"uppercase",marginBottom:6,display:"block"};
+  const inp={width:"100%",background:"#0D0D0D",border:"1px solid #2A2A2A",borderRadius:8,padding:"11px 12px",color:"#F0EDE8",fontSize:15,fontFamily:"inherit"};
+  return(
+    <div className="ain">
+      <div style={{fontSize:11,color:"#555",marginBottom:16}}>Track food to hit your calorie and protein floors per your protocol.</div>
+      <div style={{display:"flex",gap:8,marginBottom:16}}>
+        {["training","rest"].map(t=>(
+          <button key={t} onClick={()=>setDt(t)} style={{flex:1,background:dt===t?"#1A1A1A":"none",border:"1px solid "+(dt===t?"#FF4D1C":"#2A2A2A"),borderRadius:8,padding:"8px 0",color:dt===t?"#F0EDE8":"#555",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>
+            {t==="training"?"Training Day":"Rest Day"}
+          </button>
+        ))}
+      </div>
+      <div style={{background:"#111",border:"1px solid #1E1E1E",borderRadius:12,padding:16,marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-around",marginBottom:14}}>
+          <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:"bold",color:tot.cal>=floor?"#22C55E":"#F0EDE8"}}>{tot.cal}</div><div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase"}}>kcal</div><div style={{fontSize:10,color:"#444"}}>floor {floor}</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:"bold",color:tot.pro>=PROTEIN_TARGET?"#22C55E":"#F0EDE8"}}>{tot.pro}g</div><div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase"}}>protein</div><div style={{fontSize:10,color:"#444"}}>target {PROTEIN_TARGET}g</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:"bold"}}>{tot.carb}g</div><div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase"}}>carbs</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:"bold"}}>{tot.fat}g</div><div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase"}}>fat</div></div>
+        </div>
+        {[[cPct,"Calories",cPct>=1?"#22C55E":"#FF4D1C"],[pPct,"Protein",pPct>=1?"#22C55E":"#0EA5E9"]].map(([pct,label,color])=>(
+          <div key={label} style={{marginBottom:8}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#555",marginBottom:3}}><span>{label}</span><span>{Math.round(pct*100)}%</span></div>
+            <div style={{height:4,background:"#1A1A1A",borderRadius:4}}><div style={{height:4,background:color,borderRadius:4,width:(pct*100)+"%",transition:"width 0.3s"}}/></div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:"#111",border:"1px solid #1E1E1E",borderRadius:12,padding:16,marginBottom:16}}>
+        <span style={lbl}>Add Food</span>
+        <select value={sel} onChange={e=>setSel(e.target.value)} style={{...inp,marginBottom:10,color:sel?"#F0EDE8":"#555"}}>
+          <option value="">Select a food...</option>
+          {FOODS.map(f=><option key={f.name} value={f.name}>{f.name} -- {f.cal}cal / {f.pro}g protein</option>)}
+        </select>
+        <button onClick={addFood} style={{width:"100%",background:"#FF4D1C",border:"none",color:"#fff",padding:"12px 0",borderRadius:8,fontSize:12,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit",marginBottom:10}}>Add to Log</button>
+        <button onClick={()=>setShowC(!showC)} style={{width:"100%",background:"none",border:"1px dashed #2A2A2A",color:"#555",padding:"10px 0",borderRadius:8,fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>{showC?"Hide Custom Entry":"+ Custom Food"}</button>
+        {showC&&(
+          <div style={{marginTop:12}}>
+            <input placeholder="Food name" value={cn} onChange={e=>setCn(e.target.value)} style={{...inp,marginBottom:8}}/>
+            <div style={{display:"flex",gap:6,marginBottom:8}}>
+              <div style={{flex:1}}><div style={{fontSize:9,color:"#555",letterSpacing:1,textAlign:"center",marginBottom:3}}>CAL</div><input value={cc} onChange={e=>setCc(e.target.value)} inputMode="numeric" style={{...inp,textAlign:"center",padding:"8px 4px"}}/></div>
+              <div style={{flex:1}}><div style={{fontSize:9,color:"#555",letterSpacing:1,textAlign:"center",marginBottom:3}}>PROTEIN</div><input value={cp} onChange={e=>setCp(e.target.value)} inputMode="numeric" style={{...inp,textAlign:"center",padding:"8px 4px"}}/></div>
+              <div style={{flex:1}}><div style={{fontSize:9,color:"#555",letterSpacing:1,textAlign:"center",marginBottom:3}}>CARBS</div><input value={ccb} onChange={e=>setCcb(e.target.value)} inputMode="numeric" style={{...inp,textAlign:"center",padding:"8px 4px"}}/></div>
+              <div style={{flex:1}}><div style={{fontSize:9,color:"#555",letterSpacing:1,textAlign:"center",marginBottom:3}}>FAT</div><input value={cf} onChange={e=>setCf(e.target.value)} inputMode="numeric" style={{...inp,textAlign:"center",padding:"8px 4px"}}/></div>
+            </div>
+            <button onClick={addCustom} style={{width:"100%",background:"#1A1A1A",border:"1px solid #2A2A2A",color:"#F0EDE8",padding:"11px 0",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Add Custom</button>
+          </div>
+        )}
+      </div>
+      {tlog.length>0&&(
+        <div>
+          <span style={{...lbl,marginBottom:10}}>Today</span>
+          {tlog.map(e=>(
+            <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #1A1A1A"}}>
+              <div><div style={{fontSize:13,color:"#CCC"}}>{e.name}</div><div style={{fontSize:11,color:"#555"}}>{e.cal}cal - {e.pro}g pro - {e.carb}g carb - {e.fat}g fat</div></div>
+              <button onClick={()=>remove(e.id)} style={{background:"none",border:"none",color:"#444",fontSize:20,cursor:"pointer",padding:"0 4px"}}>x</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+function WeightView({data,setData}){
+  const[inp,setInp]=useState("");
+  const trend=getTrend(data.weightLog);
+  const last7=data.weightLog.slice(-7);
+  const tc=trend===null?"#555":trend>0.5?"#22C55E":trend<-0.25?"#FF4D1C":"#F5A623";
+  function log(){const w=parseFloat(inp);if(!w)return;setData(prev=>({...prev,weightLog:[...prev.weightLog.filter(e=>e.key!==todayKey()),{weight:w,date:todayStr(),key:todayKey(),id:Date.now()}].sort((a,b)=>a.id-b.id)}));setInp("");}
+  const lbl={fontSize:10,letterSpacing:3,color:"#555",textTransform:"uppercase",marginBottom:6,display:"block"};
+  return(
+    <div className="ain">
+      <div style={{fontSize:11,color:"#555",marginBottom:16}}>Protocol rule: scale trends down 5-7 days, add carbs immediately.</div>
+      <div style={{background:"#111",border:"1px solid #1E1E1E",borderRadius:12,padding:16,marginBottom:16}}>
+        <span style={lbl}>Log Today</span>
+        <div style={{display:"flex",gap:10}}>
+          <input placeholder="lbs e.g. 163.5" value={inp} onChange={e=>setInp(e.target.value)} inputMode="decimal" style={{flex:1,background:"#0D0D0D",border:"1px solid #2A2A2A",borderRadius:8,padding:"12px",color:"#F0EDE8",fontSize:16,fontFamily:"inherit"}}/>
+          <button onClick={log} style={{background:"#FF4D1C",border:"none",color:"#fff",padding:"12px 20px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit",letterSpacing:1,textTransform:"uppercase"}}>Log</button>
+        </div>
+      </div>
+      {data.weightLog.length>0&&(
+        <div>
+          <div style={{background:"#111",border:"1px solid "+(trend!==null&&trend<-0.25?"#FF4D1C":"#1E1E1E"),borderRadius:12,padding:16,marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:trend!==null&&trend<-0.25?12:0}}>
+              <div><span style={lbl}>7-Day Trend</span><div style={{fontSize:28,color:tc}}>{trend===null?"--":(trend>0?"+":"")+trend.toFixed(1)+" lbs"}</div></div>
+              <div style={{textAlign:"right"}}><span style={lbl}>Latest</span><div style={{fontSize:28}}>{data.weightLog[data.weightLog.length-1].weight} lbs</div></div>
+            </div>
+            {trend!==null&&trend<-0.25&&<div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:8,padding:"10px 12px",fontSize:13,color:"#FF8C5A",lineHeight:1.5}}>Scale trending down. Add 200-300 kcal from carbs now. Do not wait.</div>}
+            {trend!==null&&trend>0.5&&<div style={{background:"#0A1A0A",border:"1px solid #22C55E",borderRadius:8,padding:"10px 12px",fontSize:13,color:"#22C55E",lineHeight:1.5}}>Scale moving up. Productive surplus.</div>}
+          </div>
+          <div style={{background:"#111",border:"1px solid #1E1E1E",borderRadius:12,padding:16}}>
+            <span style={{...lbl,marginBottom:12}}>Recent</span>
+            {[...last7].reverse().map((e,i)=>(
+              <div key={e.id} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i<last7.length-1?"1px solid #1A1A1A":"none",fontSize:13}}>
+                <span style={{color:"#888"}}>{e.date}</span>
+                <span style={{color:"#F0EDE8",fontWeight:"bold"}}>{e.weight} lbs</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+function RestDayLog({onLog}){
+  const[type,setType]=useState("Full Rest");
+  const[notes,setNotes]=useState("");
+  const types=["Full Rest","Zone 2 Walk","Zone 2 Cardio","Mobility / Stretching","Active Recovery"];
+  return(
+    <div style={{marginTop:16}} onClick={e=>e.stopPropagation()}>
+      <div style={{fontSize:10,letterSpacing:3,color:"#64748B",textTransform:"uppercase",marginBottom:12}}>Log This Day As</div>
+      {types.map(t=>(
+        <button key={t} onClick={()=>setType(t)} style={{display:"block",width:"100%",background:type===t?"#141414":"none",border:"1px solid "+(type===t?"#64748B":"#1E1E1E"),borderRadius:8,padding:"12px 16px",color:type===t?"#F0EDE8":"#555",fontSize:13,cursor:"pointer",fontFamily:"inherit",textAlign:"left",marginBottom:8}}>{t}</button>
+      ))}
+      <textarea placeholder="Notes (optional)" value={notes} onChange={e=>setNotes(e.target.value)} style={{width:"100%",background:"#0D0D0D",border:"1px solid #2A2A2A",borderRadius:8,padding:"12px",color:"#F0EDE8",fontSize:14,fontFamily:"inherit",resize:"none",height:72,marginBottom:12}}/>
+      <button onClick={()=>onLog(type,notes)} style={{width:"100%",background:"#64748B",border:"none",color:"#fff",padding:"14px 0",borderRadius:10,fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>Log Rest Day</button>
+    </div>
+  );
+}
+function App(){
+  const[data,setData]=useState(loadData);
+  const[view,setView]=useState("home");
+  const[selDay,setSelDay]=useState(null);
+  const[session,setSession]=useState(null);
+  const[exIdx,setExIdx]=useState(0);
+  const[showCues,setShowCues]=useState(false);
+  const[alerts,setAlerts]=useState([]);
+  const[done,setDone]=useState(false);
+  const[cc,setCc]=useState(false);
+  useEffect(()=>{try{localStorage.setItem("cp_v4",JSON.stringify(data));}catch{}},[data]);
+  useEffect(()=>{
+    const a=[];
+    if(data.weekCount%DELOAD_EVERY===0)a.push({type:"deload",msg:"Week "+data.weekCount+" is a DELOAD week. 60% weights, half sets, RPE 6 max."});
+    DAYS.forEach(day=>day.exercises.forEach(ex=>{const flag=checkProg(data.sessions,ex.name,ex.rr);if(flag)a.push({type:"progress",msg:ex.name+": Hit top of rep range two sessions running at "+flag+"lbs. Add weight next session."});}));
+    const trend=getTrend(data.weightLog);
+    if(trend!==null&&trend<-0.25)a.push({type:"weight",msg:"Scale trending down. Add 200-300 kcal from carbs now per your protocol."});
+    setAlerts(a);
+  },[data]);
+  const isDeload=data.weekCount%DELOAD_EVERY===0;
+  const activeDay=session?DAYS.find(d=>d.id===session.dayId):null;
+  const aPEx=activeDay?activeDay.exercises[exIdx]:null;
+  const aSEx=session?session.exercises[exIdx]:null;
+  function startSession(dayId){
+    const day=DAYS.find(d=>d.id===dayId);if(!day||!day.exercises.length)return;
+    setSession({dayId,exercises:day.exercises.map(ex=>({name:ex.name,sets:Array.from({length:ex.sets},()=>({weight:"",reps:"",rpe:"",done:false}))}))});
+    setExIdx(0);setShowCues(false);setDone(false);setCc(false);setView("log");
+  }
+  function logRest(type,notes){
+    setData(prev=>{const sc=prev.sessionCount+1,wc=sc%6===0?prev.weekCount+1:prev.weekCount;return{...prev,sessions:[...prev.sessions,{date:todayStr(),dayId:6,type:"rest",restType:type,notes,id:Date.now()}],sessionCount:sc,weekCount:wc};});
+    setSelDay(null);
+  }
+  function updField(ei,si,field,val){setSession(prev=>({...prev,exercises:prev.exercises.map((ex,i)=>i!==ei?ex:{...ex,sets:ex.sets.map((s,j)=>j!==si?s:{...s,[field]:val})})}));}
+  function markDone(ei,si){setSession(prev=>({...prev,exercises:prev.exercises.map((ex,i)=>i!==ei?ex:{...ex,sets:ex.sets.map((s,j)=>j!==si?s:{...s,done:!s.done})})}));}
+  function addSet(ei){setSession(prev=>({...prev,exercises:prev.exercises.map((ex,i)=>i!==ei?ex:{...ex,sets:[...ex.sets,{weight:"",reps:"",rpe:"",done:false}]})}));}
+  function removeSet(ei,si){if(session.exercises[ei].sets.length<=1)return;setSession(prev=>({...prev,exercises:prev.exercises.map((ex,i)=>i!==ei?ex:{...ex,sets:ex.sets.filter((_,j)=>j!==si)})}));}
+  function finishSession(){
+    const entries=session.exercises.map(ex=>({exerciseName:ex.name,sets:ex.sets.filter(s=>s.reps).map(s=>({weight:s.weight,reps:s.reps,rpe:s.rpe}))}));
+    setData(prev=>{const sc=prev.sessionCount+1,wc=sc%6===0?prev.weekCount+1:prev.weekCount;return{...prev,sessions:[...prev.sessions,{date:todayStr(),dayId:session.dayId,type:"training",entries,id:Date.now()}],sessionCount:sc,weekCount:wc};});
+    setDone(true);
+  }
+  function updSession(updated){setData(prev=>({...prev,sessions:prev.sessions.map(s=>s.id===updated.id?updated:s)}));}
+  const lbl=(c)=>({fontSize:10,letterSpacing:3,color:c||"#555",textTransform:"uppercase",marginBottom:6,display:"block"});
+  const card=(b,bg)=>({background:bg||"#111",border:"1px solid "+(b||"#1E1E1E"),borderRadius:12,padding:16,marginBottom:12});
+  const btn=(bg,c)=>({width:"100%",background:bg,border:"none",color:c||"#fff",padding:"14px 0",borderRadius:10,fontSize:13,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"});
+  const inp={width:"100%",background:"#080808",border:"1px solid #2A2A2A",borderRadius:8,padding:"11px 12px",color:"#F0EDE8",fontSize:17,fontFamily:"inherit",textAlign:"center"};
+  const tabs=[["home","Program"],["nutrition","Nutrition"],["weight","Weight"],["history","History"],["coach","Coach"+(alerts.length>0?" ("+alerts.length+")":"")]];
+  return(
+    <div style={{minHeight:"100vh",background:"#080808",color:"#F0EDE8",maxWidth:480,margin:"0 auto"}}>
+      <div style={{padding:"52px 20px 0",borderBottom:"1px solid #1E1E1E",background:"#080808",position:"sticky",top:0,zIndex:50}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+          <div><span style={lbl()}>Training Log</span><div style={{fontSize:22}}>Coach Protocol</div></div>
+          <div style={{textAlign:"right"}}><span style={lbl()}>Week</span><div style={{fontSize:28,color:isDeload?"#FF4D1C":"#F0EDE8",fontWeight:"bold",lineHeight:1}}>{data.weekCount}</div>{isDeload&&<div style={{fontSize:9,color:"#FF4D1C",letterSpacing:2,textTransform:"uppercase"}}>DELOAD</div>}</div>
+        </div>
+        {view!=="log"&&(
+          <div style={{display:"flex",overflowX:"auto"}}>
+            {tabs.map(([v,label])=>(
+              <button key={v} onClick={()=>setView(v)} style={{flexShrink:0,background:"none",border:"none",borderBottom:"2px solid "+(view===v?"#FF4D1C":"transparent"),color:view===v?"#F0EDE8":"#555",padding:"10px 12px",cursor:"pointer",fontSize:11,letterSpacing:1,textTransform:"uppercase",fontFamily:"inherit",whiteSpace:"nowrap"}}>{label}</button>
+            ))}
+          </div>
+        )}
+        {view==="log"&&session&&!done&&(
+          <div style={{paddingBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <span style={{...lbl(activeDay?activeDay.color:"#555"),marginBottom:0}}>{activeDay?activeDay.label:""}</span>
+              {!cc
+                ?<button onClick={()=>setCc(true)} style={{background:"none",border:"1px solid #3A1A1A",borderRadius:6,padding:"6px 12px",color:"#CC3311",fontSize:11,letterSpacing:1,cursor:"pointer",fontFamily:"inherit",textTransform:"uppercase"}}>Cancel x</button>
+                :<div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{fontSize:11,color:"#888"}}>Sure?</span><button onClick={()=>{setView("home");setSession(null);setCc(false);}} style={{background:"#CC3311",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Yes</button><button onClick={()=>setCc(false)} style={{background:"none",border:"1px solid #2A2A2A",borderRadius:6,padding:"6px 12px",color:"#888",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>No</button></div>
+              }
+            </div>
+            <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
+              {session.exercises.map((ex,i)=>{
+                const allDone=ex.sets.every(s=>s.done),someDone=ex.sets.some(s=>s.done);
+                return(<button key={i} onClick={()=>{setExIdx(i);setShowCues(false);}} style={{flexShrink:0,background:i===exIdx?"#1A1A1A":"none",border:"1px solid "+(i===exIdx?(activeDay?activeDay.color:"#FF4D1C"):allDone?"#22C55E":someDone?"#444":"#2A2A2A"),borderRadius:20,padding:"5px 12px",color:i===exIdx?"#F0EDE8":allDone?"#22C55E":"#555",fontSize:11,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{allDone?"ok ":""}{i+1}</button>);
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{padding:20}}>
+        {view==="home"&&(
+          <div className="ain">
+            {alerts.length>0&&(<div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:12,padding:14,marginBottom:20}}><span style={lbl("#FF4D1C")}>Coach Alerts</span>{alerts.slice(0,2).map((a,i)=><div key={i} style={{fontSize:13,color:"#FF8C5A",marginBottom:4,lineHeight:1.5}}>{a.msg}</div>)}{alerts.length>2&&<div style={{fontSize:12,color:"#555",marginTop:6,cursor:"pointer"}} onClick={()=>setView("coach")}>+{alerts.length-2} more in Coach</div>}</div>)}
+            <span style={lbl()}>Select Day</span>
+            {DAYS.map(d=>{
+              const last=[...data.sessions].reverse().find(s=>s.dayId===d.id);
+              const open=selDay===d.id;
+              return(
+                <div key={d.id} onClick={()=>setSelDay(open?null:d.id)} style={{background:open?"#141414":"#0D0D0D",border:"1px solid "+(open?d.color:"#1E1E1E"),borderRadius:12,padding:"14px 16px",marginBottom:10,cursor:"pointer"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div><span style={lbl(d.color)}>{d.name}</span><div style={{fontSize:15}}>{d.label}</div></div>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>{last&&<div style={{fontSize:10,color:"#444"}}>{last.date}</div>}<div style={{fontSize:18,color:"#333"}}>{open?"-":"+"}</div></div>
+                  </div>
+                  {open&&(
+                    <div style={{marginTop:14}} onClick={e=>e.stopPropagation()}>
+                      {d.type==="rest"?(<RestDayLog onLog={logRest}/>):(
+                        <div>
+                          {d.exercises.map(ex=>(<div key={ex.name} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1A1A1A",fontSize:13}}><span style={{color:"#CCC"}}>{ex.name}</span><span style={{color:"#555",fontSize:11}}>{ex.sets}x{ex.rr[0]}-{ex.rr[1]}</span></div>))}
+                          <button onClick={()=>startSession(d.id)} style={{...btn(d.color),marginTop:16}}>{isDeload?"Start Deload":"Start Session"}</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <ResetBtn onReset={()=>setData({sessions:[],weightLog:[],nutritionLog:[],weekCount:1,sessionCount:0})}/>
+          </div>
+        )}
+        {view==="nutrition"&&<NutritionView data={data} setData={setData}/>}
+        {view==="weight"&&<WeightView data={data} setData={setData}/>}
+        {view==="log"&&session&&!done&&aPEx&&aSEx&&(
+          <div className="ain">
+            {isDeload&&<div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:10,padding:12,marginBottom:16,fontSize:12,color:"#FF8C5A"}}>DELOAD - 60% weight, half sets, RPE 6 max.</div>}
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:24,marginBottom:6,lineHeight:1.2}}>{aPEx.name}</div>
+              <div style={{fontSize:12,color:"#666",marginBottom:12}}>{aPEx.sets} sets x {aPEx.rr[0]}-{aPEx.rr[1]} reps - RPE {aPEx.rpe}</div>
+              <button onClick={()=>setShowCues(!showCues)} style={{background:"none",border:"1px solid #2A2A2A",borderRadius:8,padding:"8px 14px",color:"#888",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>{showCues?"Hide Cues":"Form Cues"}</button>
+              {showCues&&<div style={{background:"#0D0D0D",border:"1px solid #1E1E1E",borderRadius:10,padding:14,fontSize:13,color:"#888",lineHeight:1.7,marginTop:10}}>{aPEx.cues}</div>}
+            </div>
+            <Stopwatch/>
+            {(()=>{
+              const prev=[...data.sessions].reverse().find(s=>s.dayId===session.dayId&&s.entries&&s.entries.some(e=>e.exerciseName===aPEx.name));
+              const pe=prev&&prev.entries?prev.entries.find(e=>e.exerciseName===aPEx.name):null;
+              if(!pe||!pe.sets.length)return<div style={{...card(),marginBottom:16}}><span style={lbl()}>First time - establish your baseline</span></div>;
+              return(<div style={{...card(),marginBottom:16}}><span style={lbl()}>Last time - {prev.date}</span><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{pe.sets.map((s,i)=><div key={i} style={{background:"#0D0D0D",borderRadius:8,padding:"6px 10px",fontSize:12,color:"#777"}}>{s.weight?s.weight+"lb":"BW"} x {s.reps} {s.rpe?"@"+s.rpe:""}</div>)}</div></div>);
+            })()}
+            <span style={lbl()}>Log Sets</span>
+            {aSEx.sets.map((s,si)=>(
+              <div key={si} style={{background:s.done?"#0A1A0A":"#111",border:"1px solid "+(s.done?"#22C55E":"#1E1E1E"),borderRadius:12,padding:"12px 14px",marginBottom:10,transition:"all 0.2s"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:s.done?0:10}}>
+                  <div style={{fontSize:11,color:s.done?"#22C55E":"#555",letterSpacing:2,textTransform:"uppercase"}}>{s.done?"done ":""}Set {si+1}</div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    {s.done&&<div style={{fontSize:12,color:"#22C55E"}}>{s.weight?s.weight+"lb":"BW"} x {s.reps}{s.rpe?" @"+s.rpe:""}</div>}
+                    <button onClick={()=>removeSet(exIdx,si)} style={{background:"none",border:"1px solid #2A2A2A",borderRadius:6,color:"#444",cursor:"pointer",fontSize:13,padding:"3px 8px"}}>x</button>
+                    <button onClick={()=>markDone(exIdx,si)} style={{background:s.done?"#0A2A0A":"#1A1A1A",border:"1px solid "+(s.done?"#22C55E":"#2A2A2A"),borderRadius:8,padding:"6px 14px",color:s.done?"#22C55E":"#666",fontSize:11,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",fontFamily:"inherit"}}>{s.done?"Undo":"Done"}</button>
+                  </div>
+                </div>
+                {!s.done&&(
+                  <div style={{display:"flex",gap:8}}>
+                    <div style={{flex:1}}><div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:5,textAlign:"center"}}>WEIGHT lbs</div><input placeholder="0" value={s.weight} onChange={e=>updField(exIdx,si,"weight",e.target.value)} inputMode="decimal" style={inp}/></div>
+                    <div style={{flex:1}}><div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:5,textAlign:"center"}}>REPS</div><input placeholder="0" value={s.reps} onChange={e=>updField(exIdx,si,"reps",e.target.value)} inputMode="numeric" style={inp}/></div>
+                    <div style={{width:72}}><div style={{fontSize:10,color:"#555",letterSpacing:1,marginBottom:5,textAlign:"center"}}>RPE</div><input placeholder="8" value={s.rpe} onChange={e=>updField(exIdx,si,"rpe",e.target.value)} inputMode="decimal" style={inp}/></div>
+                  </div>
+                )}
+              </div>
+            ))}
+            <button onClick={()=>addSet(exIdx)} style={{...btn("none","#555"),border:"1px dashed #2A2A2A",fontSize:12,marginBottom:20}}>+ Add Set</button>
+            <div style={{display:"flex",gap:10}}>
+              {exIdx>0&&<button onClick={()=>{setExIdx(i=>i-1);setShowCues(false);}} style={{...btn("#1A1A1A","#888"),flex:1}}>Back</button>}
+              {exIdx<session.exercises.length-1?<button onClick={()=>{setExIdx(i=>i+1);setShowCues(false);}} style={{...btn(activeDay?activeDay.color:"#FF4D1C"),flex:2}}>Next Exercise</button>:<button onClick={finishSession} style={{...btn("#22C55E"),flex:2}}>Finish Session</button>}
+            </div>
+          </div>
+        )}
+        {view==="log"&&done&&(
+          <div className="ain" style={{textAlign:"center",padding:"60px 0"}}>
+            <div style={{fontSize:64,marginBottom:20}}>✓</div>
+            <div style={{fontSize:24,marginBottom:8}}>Session complete.</div>
+            <div style={{fontSize:13,color:"#555",marginBottom:40}}>Coach alerts updated.</div>
+            {alerts.length>0&&(<div style={{background:"#1A0800",border:"1px solid #FF4D1C",borderRadius:12,padding:16,marginBottom:24,textAlign:"left"}}><span style={lbl("#FF4D1C")}>Coach Alerts</span>{alerts.map((a,i)=><div key={i} style={{fontSize:13,color:"#FF8C5A",marginBottom:8,lineHeight:1.5}}>{a.msg}</div>)}</div>)}
+            <button onClick={()=>{setView("home");setSession(null);setDone(false);}} style={btn("#FF4D1C")}>Back to Program</button>
+          </div>
+        )}
+        {view==="history"&&(
+          <div className="ain">
+            <span style={{...lbl(),display:"block",marginBottom:16}}>Session History</span>
+            {!data.sessions.length&&<div style={{color:"#444",fontSize:14,padding:"40px 0",textAlign:"center"}}>No sessions logged yet.</div>}
+            {[...data.sessions].reverse().map((s,i)=>{const day=DAYS.find(d=>d.id===s.dayId);return<HistoryCard key={s.id||i} session={s} day={day} onUpdate={updSession}/>;})}</div>
+        )}
+        {view==="coach"&&(
+          <div className="ain">
+            <span style={{...lbl(),display:"block",marginBottom:16}}>Coach Dashboard</span>
+            <div style={{...card(isDeload?"#FF4D1C":"#1E1E1E"),marginBottom:16}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div><span style={lbl()}>Current Week</span><div style={{fontSize:32}}>{data.weekCount}</div></div>
+                <div style={{textAlign:"right"}}><span style={lbl()}>Next Deload</span><div style={{fontSize:24,color:"#FF4D1C"}}>Week {Math.ceil(data.weekCount/DELOAD_EVERY)*DELOAD_EVERY}</div></div>
+              </div>
+              {isDeload&&<div style={{marginTop:12,background:"#1A0800",borderRadius:8,padding:"10px 12px",fontSize:13,color:"#FF8C5A",lineHeight:1.5}}>Deload week. 60% weights, half sets, RPE 6 cap. Do not skip.</div>}
+            </div>
+            {!alerts.length?<div style={{background:"#0A1A0A",border:"1px solid #1E3A1E",borderRadius:12,padding:16,fontSize:14,color:"#22C55E",marginBottom:12}}>No alerts. Stay the course.</div>:alerts.map((a,i)=>(
+              <div key={i} style={{background:a.type==="deload"?"#1A0800":"#0A100A",border:"1px solid "+(a.type==="deload"?"#FF4D1C":a.type==="weight"?"#F5A623":"#22C55E"),borderRadius:12,padding:16,marginBottom:12}}>
+                <span style={lbl(a.type==="deload"?"#FF4D1C":a.type==="weight"?"#F5A623":"#22C55E")}>{a.type==="deload"?"Deload Required":a.type==="weight"?"Scale Alert":"Add Weight"}</span>
+                <div style={{fontSize:14,color:"#F0EDE8",lineHeight:1.6}}>{a.msg}</div>
+              </div>
+            ))}
+            <div style={{...card(),marginTop:8}}>
+              <span style={{...lbl(),display:"block",marginBottom:14}}>Stats</span>
+              <div style={{display:"flex",justifyContent:"space-around"}}>
+                {[[data.sessions.filter(s=>s.type==="training").length,"Sessions"],[data.weekCount,"Weeks"],[Math.floor(data.weekCount/DELOAD_EVERY),"Deloads"]].map(([n,l])=>(<div key={l} style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:"bold"}}>{n}</div><div style={{fontSize:10,color:"#555",letterSpacing:2,textTransform:"uppercase",marginTop:4}}>{l}</div></div>))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
